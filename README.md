@@ -134,6 +134,10 @@ Sample host_vars/leaf1.example.com
           peer_group: demoleaf
           remote_as: 65003
 
+    eos_purge_bgp_networks: no
+    eos_purge_bgp_neighbors: no
+
+
 A simple playbook to configure BGP, leaf.yml
 
     - hosts: leafs
