@@ -92,12 +92,12 @@ The eos-bgp roles requires:
 Example Playbook
 ----------------
 
-The following example will use the arista.eos-bgp role to completely setup
-CLI users, ip routing and the switch hostname without writing any tasks. We'll create a
+The following example will use the arista.eos-bgp role to setup
+a majority of BGP configuration without writing any tasks. We'll create a
 ``hosts`` file with our switch, then a corresponding ``host_vars`` file and
 then a simple playbook which only references the eos-bgp role. By including
-the role, we automatically get access to all of the tasks to configure system
-features. What's nice about this is that if you have a host without system
+the role, we automatically get access to all of the tasks to configure BGP
+settings. What's nice about this is that if you have a host without BGP
 configuration, the tasks will be skipped without any issue.
 
 
