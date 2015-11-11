@@ -32,7 +32,7 @@
 ---
 galaxy_info:
   author: EOS+ CS
-  description: Role for managing EOS global system configuration
+  description: Role for managing EOS BGP configuration
   company: Arista
   license: BSD-3
   min_ansible_version: 1.9
