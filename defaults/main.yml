@@ -1,9 +1,20 @@
 ---
 # defaults file for eos-bgp
-# these defaults will cause Ansible to skip all tasks
-bgp:
+bgp_defaults:
+  state: present
   enable: no
+  maximum_paths: 1
   log_neighbor_changes: yes
+  redistribute: []
+  timers:
+    keep_alive: 60
+    hold: 180
+
+neighbor_defaults:
+  enable: yes
+
+network_defaults:
+  state: present
 
 eos_purge_bgp_networks: no
 eos_purge_bgp_neighbors: no

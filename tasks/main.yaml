@@ -1,157 +1,154 @@
 ---
-- name: configure BGP global parameters
-  eos_bgp_config:
-    bgp_as={{ bgp.bgp_as|default(omit) }}
-    enable={{ bgp.enable|default(omit) }}
-    router_id={{ bgp.router_id|default(omit) }}
-    maximum_paths={{ bgp.maximum_paths|default(omit) }}
-    maximum_ecmp_paths={{ bgp.maximum_ecmp_paths|default(omit) }}
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  when: bgp is defined and bgp.enable
+- name: Gather EOS configuration
+  eos_command:
+    commands: 'show running-config all'
+    provider: "{{ provider|default(omit) }}"
+    auth_pass: "{{ auth_pass|default(omit) }}"
+    authorize: "{{ authorize|default(omit) }}"
+    host: "{{ host|default(omit) }}"
+    password: "{{ password|default(omit) }}"
+    port: "{{ port|default(omit) }}"
+    transport: 'cli'
+    use_ssl: "{{ use_ssl|default(omit) }}"
+    username: "{{ username|default(omit) }}"
+  register: output
+  no_log: "{{ no_log|default(true) }}"
+  when: _eos_config is not defined
 
-- name: configure BGP neighbors
-  eos_bgp_neighbor:
-    name={{ item.name }}
-    remote_as={{ item.remote_as|default(omit) }}
-    enable={{ item.enable|default(omit) }}
-    description={{ item.description|default(omit) }}
-    next_hop_self={{ item.next_hop_self|default(omit) }}
-    peer_group={{ item.peer_group|default(omit) }}
-    route_map_in={{ item.route_map_in|default(omit) }}
-    route_map_out={{ item.route_map_out|default(omit) }}
-    send_community={{ item.send_community|default(omit) }}
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  with_items: bgp.neighbors
-  when: bgp.neighbors is defined and bgp.enable
-  register: eos_bgp_neighbor_result
+- name: Save EOS configuration
+  set_fact:
+    _eos_config: "{{ output.stdout[0] }}"
+  no_log: "{{ no_log|default(true) }}"
+  when: _eos_config is not defined
 
-- name: set BGP redistribute setting
-  eos_config:
-    section='router bgp {{ bgp.bgp_as }}'
-    regexp='(?<!no )redistribute {{ item }}'
-    command='redistribute {{ item }}'
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  when: bgp.redistribute is defined and bgp.enable
-  with_items: bgp.redistribute | default([])
+- name: Arista EOS BGP resources
+  eos_template:
+    src: bgp.j2
+    include_defaults: true
+    config: "{{ _eos_config | default(omit) }}"
+    auth_pass: "{{ auth_pass | default(omit) }}"
+    authorize: "{{ authorize | default(omit) }}"
+    host: "{{ host | default(omit) }}"
+    password: "{{ password | default(omit) }}"
+    port: "{{ port | default(omit) }}"
+    provider: "{{ provider | default(omit) }}"
+    transport: 'cli'
+    use_ssl: "{{ use_ssl | default(omit) }}"
+    username: "{{ username | default(omit) }}"
+  register: bgp_result
+  when: bgp is defined and bgp.bgp_as is defined
 
-- name: set BGP log neighbor changes
-  eos_config:
-    section='router bgp {{ bgp.bgp_as }}'
-    regexp='(?<!no )bgp log-neighbor-changes'
-    command='bgp log-neighbor-changes'
-    username={{ eos_eapi_username|default(omit) }}
-    config={{ eos_eapi_config|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  when: bgp.log_neighbor_changes and bgp.enable
+- block:
+  # If the bgp task resulted in a change, we need to update
+  # _eos_config, otherwise we may get unintended results
+  # on future tasks
 
-- name: set BGP timers
-  eos_config:
-    section='router bgp {{ bgp.bgp_as }}'
-    command='timers bgp {{ bgp.timers.keep_alive }} {{ bgp.timers.hold }}'
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  when: bgp.timers is defined and bgp.enable
+  - name: Gather EOS configuration
+    eos_command:
+      commands: 'show running-config all'
+      provider: "{{ provider|default(omit) }}"
+      auth_pass: "{{ auth_pass|default(omit) }}"
+      authorize: "{{ authorize|default(omit) }}"
+      host: "{{ host|default(omit) }}"
+      password: "{{ password|default(omit) }}"
+      port: "{{ port|default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl|default(omit) }}"
+      username: "{{ username|default(omit) }}"
+    register: output
+    no_log: "{{ no_log|default(true) }}"
 
-- name: set BGP listeners
-  eos_config:
-    section='router bgp {{ bgp.bgp_as }}'
-    command='bgp listen range {{ item.name }} peer-group {{ item.peer_group }} remote-as {{ item.remote_as }}'
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  when: bgp is defined and bgp.enable and bgp.listeners
-  with_items: bgp.listeners | default([])
+  - name: Save EOS configuration
+    set_fact:
+      _eos_config: "{{ output.stdout[0] }}"
+    no_log: "{{ no_log|default(true) }}"
 
-- name: purge BGP neighbors
-  eos_purge:
-    resource=eos_bgp_neighbor
-    results='{{ eos_bgp_neighbor_result|to_nice_json }}'
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  when: eos_bgp_neighbor_result is defined and
-        (bgp.enable and eos_purge_bgp_neighbors)
+  when: bgp_result | changed
 
-- name: configure BGP networks
-  eos_bgp_network:
-    prefix={{ item.prefix }}
-    masklen={{ item.masklen }}
-    route_map={{ item.route_map|default(omit) }}
-    state={{ item.state|default(omit) }}
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  with_items: bgp.networks
-  when: bgp.networks is defined and bgp.enable
-  register: eos_bgp_network_result
+- block:
+  # only do the remaining tasks if bgp was defined and present,
+  # otherwise the configuration is pointless
 
-- name: purge BGP networks
-  eos_purge:
-    resource=eos_bgp_network
-    results='{{ eos_bgp_network_result|to_nice_json }}'
-    config={{ eos_eapi_config|default(omit) }}
-    username={{ eos_eapi_username|default(omit) }}
-    password={{ eos_eapi_password|default(omit) }}
-    enablepwd={{ eos_eapi_enablepwd|default(omit) }}
-    transport={{ eos_eapi_transport|default(omit) }}
-    connection={{ eos_eapi_connection|default(omit) }}
-    host={{ eos_eapi_host|default(omit) }}
-    port={{ eos_eapi_port|default(omit) }}
-    debug={{ eos_debug|default(omit) }}
-  when: eos_bgp_network_result is defined and
-        (bgp.enable and eos_purge_bgp_networks)
+  - name: Arista EOS BGP configure neighbors
+    eos_template:
+      src: bgp_neighbors.j2
+      include_defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    when: bgp.enable is defined and bgp.enable and item.name is defined
+    with_items: "{{ bgp.neighbors | default([]) }}"
+
+  - name: Arista EOS BGP purge neighbors
+    eos_template:
+      src: bgp_purge_neighbors.j2
+      include_defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    when: bgp.enable is defined and bgp.enable and eos_purge_bgp_neighbors
+
+  - name: Arista EOS BGP redistribute setting
+    eos_template:
+      src: bgp_redistribute.j2
+      include_defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    when: bgp.enable is defined and bgp.enable
+
+  - name: Arista EOS BGP configure networks
+    eos_template:
+      src: bgp_networks.j2
+      include_defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    when: bgp.enable is defined and bgp.enable
+    with_items: "{{ bgp.networks | default([]) }}"
+
+  - name: Arista EOS BGP purge networks
+    eos_template:
+      src: bgp_purge_networks.j2
+      include_defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    when: bgp.enable is defined and bgp.enable and eos_purge_bgp_networks
+
+  when: bgp is defined and bgp.bgp_as is defined

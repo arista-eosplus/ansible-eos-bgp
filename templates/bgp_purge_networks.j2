@@ -1,0 +1,49 @@
+! templates/bgp_purge_networks.j2
+#jinja2: trim_blocks: False
+#jinja2: lstrip_blocks: False
+
+{% set bgp_as = bgp.bgp_as %}
+
+{# get the current router bgp config block #}
+{% set bgp_block = _eos_config | config_block("router bgp %s" % bgp_as, indent=3) %}
+
+{% if not bgp_block %}
+   {# if the bgp router is not configured, we have a problem
+   {# the line below will force an error on the task, but
+   {# technically should not happen #}
+   {{ "Error configuring bgp networks: bgp config block not found" }}
+
+{% else %}
+   {# find all the currently set networks, keeping the entire string #}
+   {% set match = bgp_block | join('\n') | re_findall("^(network (?:[\d\.\/]+)(?: route-map .*)?)$") %}
+
+   {# if no match found, nothing to purge, otherwise... #}
+   {% if match %}
+   {# enter the bgp configuration block #}
+
+router bgp {{ bgp_as }}
+
+      {# build a list of the expected networks #}
+      {% set net_list = [] %}
+      {% if bgp.networks is defined %}
+         {% for n in bgp.networks %}
+            {% if n.state is not defined or n.state == 'present' %}
+               {% if n.routemap is defined %}
+                  {% set dump = net_list.append("network %s/%s route-map %s" %
+                     (n.prefix, n.masklen, n.routemap)) %}
+               {% else %}
+                  {% set dump = net_list.append("network %s/%s" % (n.prefix, n.masklen)) %}
+               {% endif %} {# if n.routemap #}
+            {% endif %} {# if n.state #}
+         {% endfor %} {# for n in bgp.networks #}
+      {% endif %} {# if bgp.networks #}
+
+      {# determine which networks in match need to be purged #}
+      {% set purge_list = match | difference(net_list) %}
+      {% for network in purge_list %}
+
+   no {{ network }}
+
+      {% endfor %} {# for network in purge_list #}
+   {% endif %} {# if match #}
+{% endif %}

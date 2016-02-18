@@ -35,7 +35,6 @@ and ``eos_purge_bgp_neighbors`` objects described below:
 |:----------------------:|:---------------------:|-----------------------------------------------------------|
 | eos_purge_bgp_networks | boolean: true, false* | Enables or disables the purging feature for BGP Networks. |
 
-
 **eos_purge_bgp_neighbors**
 
 |           Key           |          Type         | Notes                                                      |
@@ -44,50 +43,48 @@ and ``eos_purge_bgp_neighbors`` objects described below:
 
 **bgp** (dictionary) each entry contains the following keys:
 
-|                      Key | Type                      | Notes                                                                                                                                                                                                                                                                      |
-|-------------------------:|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|                   bgp_as | string (required)         | The BGP autonomous system number to be configured for the local BGP routing instance.                                                                                                                                                                                      |
-|                   enable | boolean: true, false*     | Configures the administrative state for the global BGP routing process. If enable is True then the BGP routing process is administartively enabled and if enable is False then the BGP routing process is administratively disabled.                                       |
-|            maximum_paths | int                       | Configures the maximum number of ecmp paths for each route. The EOS default for this attribute is the maximum value, which varies by hardware platform. Check your Arista documentation for more information. This value should be greater than or equal to maximum_paths. |
-|       maximum_ecmp_paths | int                       | Configures the maximum number of parallel routes. The EOS default for this attribute is 1. This value should be less than or equal to maximum_ecmp_paths.                                                                                                                  |
-|     log_neighbor_changes | boolean: true*, false     | Enables or disables the logging of neighbor changes.                                                                                                                                                                                                                       |
-|             redistribute | list                      | A list of the types of routes to redistribute.                                                                                                                                                                                                                             |
-|                   timers | dictionary                | See below for included keys                                                                                                                                                                                                                                                |
-|        timers.keep_alive | int: 0-15                 | Configures the keep_alive value in seconds.  Values from 0 to 3600.                                                                                                                                                                                                        |
-|              timers.hold | string                    | Configures the hold timer. Values include 0 or 3 to 7200.                                                                                                                                                                                                                  |
-|                neighbors | list                      | See below for included keys for each list item                                                                                                                                                                                                                             |
-|           neighbors.name | string                    | The name of the BGP neighbor to manage. This value can be either an IPv4 address or string (in the case of managing a peer group)                                                                                                                                          |
-|    neighbors.description | string                    | Configures the BGP neighbors description value. The value specifies an arbitrary description to add to the neighbor statement in the nodes running-configuration.                                                                                                          |
-|      neighbors.remote_as | int                       | Configures the BGP neighbors remote-as value.                                                                                                                                                                                                                              |
-|   neighbors.route_map_in | string                    | Configures the BGP neigbhors route-map in value. The value specifies the name of the route-map.                                                                                                                                                                            |
-|  neighbors.route_map_out | string                    | Configures the BGP neighbors route-map out value. The value specifies the name of the route-map.                                                                                                                                                                           |
-| neighbors.send_community | boolean: true, false      | Configures the BGP neighbors send-community value. If enabled then the BGP send-community value is enable. If disabled, then the BGP send-community value is disabled.                                                                                                     |
-|     neighbors.peer_group | string                    | The name of the peer-group value to associate with the neighbor. This argument is only valid if the neighbor is an IPv4 address                                                                                                                                            |
-|         neighbors.enable | boolean: true, false      | Configures the administrative state for the BGP neighbor process. If enable is True then the BGP neighbor process is administartively enabled and if enable is False then the BGP neighbor process is administratively disabled.                                           |
-|                listeners | list                      | See below for included keys for each list item                                                                                                                                                                                                                             |
-|           listeners.name | string                    | The IPv4 network which describes the listen range. For example 192.168.1.0/24.                                                                                                                                                                                             |
-|     listeners.peer_group | string                    | The name of the peer-group value to associate with the neighbor.                                                                                                                                                                                                           |
-|      listeners.remote_as | string                    | Configures the BGP listeners remote-as value.                                                                                                                                                                                                                              |
-|                 networks | list                      | See below for included keys for each list item                                                                                                                                                                                                                             |
-|          networks.prefix | string                    | The IPv4 prefix to configure as part of the network statement. The value must be a valid IPv4 prefix                                                                                                                                                                       |
-|         networks.masklen | int                       | The IPv4 subnet mask length in bits. The value for the masklen must be in the valid range of 1 to 32.                                                                                                                                                                      |
-|        networks.routemap | string                    | Configures the BGP route-map name to apply to the network statement when configured. Note this module does not create the route-map                                                                                                                                        |
-|           networks.state | choices: present*, absent | Set the state for the BGP network.  To remove the network use the absent value.                                                                                                                                                                                            |
-|                    state | choices: present*, absent | Set the state for the BGP router configuration.                                                                                                                                                                                                                            |
-
+|                      Key | Type                      | Notes                                                                                 |
+|-------------------------:|---------------------------|---------------------------------------------------------------------------------------|
+|                   bgp_as | string (required)         | The BGP autonomous system number to be configured for the local BGP routing instance. |
+|                   enable | boolean: true, false*     | Configures the administrative state for the global BGP routing process. If enable is True then the BGP routing process is administartively enabled and if enable is False then the BGP routing process is administratively disabled. |
+|            maximum_paths | int                       | Configures the maximum number of parallel routes. The EOS default for this attribute is 1. This value should be less than or equal to maximum_ecmp_paths. |
+|       maximum_ecmp_paths | int                       | Configures the maximum number of ecmp paths for each route. The EOS default for this attribute is the maximum value, which varies by hardware platform. Check your Arista documentation for more information. This value should be greater than or equal to maximum_paths. |
+|     log_neighbor_changes | boolean: true*, false     | Enables or disables the logging of neighbor changes. |
+|             redistribute | list                      | A list of the types of routes to redistribute. |
+|                   timers | dictionary                | See the following timers.* keys for each list item |
+|        timers.keep_alive | int: 0-15                 | Configures the keep_alive value in seconds.  Values from 0 to 3600. Default is 60. |
+|              timers.hold | string                    | Configures the hold timer. Values include 0 or 3 to 7200. Default is 180. |
+|                    state | choices: present*, absent | Set the state for the BGP router configuration. |
+|                neighbors | list                      | See the following neighbors.* keys for each list item |
+|           neighbors.name | string (required)         | The name of the BGP neighbor to manage. This value can be either an IPv4 address or string (in the case of managing a peer group) |
+|    neighbors.description | string                    | Configures the BGP neighbors description value. The value specifies an arbitrary description to add to the neighbor statement in the nodes running-configuration. |
+|      neighbors.remote_as | int                       | Configures the BGP neighbors remote-as value. |
+|   neighbors.route_map_in | string                    | Configures the BGP neigbhors route-map in value. The value specifies the name of the route-map. |
+|  neighbors.route_map_out | string                    | Configures the BGP neighbors route-map out value. The value specifies the name of the route-map. |
+| neighbors.send_community | boolean: true, false      | Configures the BGP neighbors send-community value. If enabled then the BGP send-community value is enable. If disabled, then the BGP send-community value is disabled. |
+|     neighbors.peer_group | string                    | The name of the peer-group value to associate with the neighbor. This argument is only valid if the neighbor is an IPv4 address |
+|         neighbors.enable | boolean: true*, false     | Configures the administrative state for the BGP neighbor process. If enable is True then the BGP neighbor process is administartively enabled and if enable is False then the BGP neighbor process is administratively disabled. |
+|                listeners | list                      | See the following listeners.* keys for each list item |
+|           listeners.name | string (required)         | The IPv4 network which describes the listen range. For example 192.168.1.0/24. |
+|     listeners.peer_group | string (required)         | The name of the peer-group value to associate with the neighbor. |
+|      listeners.remote_as | string (required)         | Configures the BGP listeners remote-as value. |
+|                 networks | list                      | See the following networks.* keys for each list item |
+|          networks.prefix | string (required)         | The IPv4 prefix to configure as part of the network statement. The value must be a valid IPv4 prefix |
+|         networks.masklen | int (required)            | The IPv4 subnet mask length in bits. The value for the masklen must be in the valid range of 1 to 32. |
+|        networks.routemap | string                    | Configures the BGP route-map name to apply to the network statement when configured. Note this module does not create the route-map |
+|           networks.state | choices: present*, absent | Set the state for the BGP network.  To remove the network use the absent value. |
 
 ```
 Note: Asterisk (*) denotes the default value if none specified
 ```
 
-
 Dependencies
 ------------
 
-The eos-bgp role utilizes modules distributed within the arista.eos role.
-The eos-bgp roles requires:
+The eos-interfaces role is built on modules included in the core Ansible code.
+These modules were added in ansible version 2.1
 
-- arista.eos version 1.2.0
+- Ansible 2.1.0
 
 Example Playbook
 ----------------
