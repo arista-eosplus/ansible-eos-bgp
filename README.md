@@ -81,7 +81,7 @@ Note: Asterisk (*) denotes the default value if none specified
 Dependencies
 ------------
 
-The eos-interfaces role is built on modules included in the core Ansible code.
+The eos-bgp role is built on modules included in the core Ansible code.
 These modules were added in ansible version 2.1
 
 - Ansible 2.1.0
