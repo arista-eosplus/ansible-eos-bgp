@@ -20,8 +20,9 @@ ansible-galaxy install arista.eos-bgp
 Requirements
 ------------
 
-Requires the arista.eos role.  If you have not worked with the arista.eos role,
-consider following the [Quickstart][quickstart] guide.
+Requires an SSH connection for connectivity to your Arista device. You can use
+any of the built-in eos connection variables, or the convenience ``provider``
+dictionary.
 
 Role Variables
 --------------
