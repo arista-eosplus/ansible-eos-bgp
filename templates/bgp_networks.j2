@@ -1,0 +1,51 @@
+! templates/bgp_networks.j2
+#jinja2: trim_blocks: False
+#jinja2: lstrip_blocks: False
+
+{% set bgp_as = bgp.bgp_as %}
+
+{# pull in any missing default parameters for bgp networks by updating
+{# the default dictionary with the input dictionary, then assigning
+{# it back to the bgp network variable #}
+{% set dump = network_defaults.update(item) %}
+{% set network = network_defaults %}
+
+{% set state = network.state %}
+
+{# get the current router bgp config block #}
+{% set bgp_block = _eos_config | config_block("router bgp %s" % bgp_as, indent=3) %}
+
+{# enter the bgp configuration block #}
+
+router bgp {{ bgp_as }}
+
+{% if state == 'absent' %}
+   {# remove the network if it exists #}
+   {% if network.routemap is defined %}
+      {% if "network %s/%s route-map %s" %
+         (network.prefix, network.masklen, network.routemap) in bgp_block %}
+
+   no network {{ network.prefix }}/{{ network.masklen }} route-map {{ network.routemap }}
+
+      {% endif %}
+   {% else %}
+      {% if "network %s/%s" % (network.prefix, network.masklen) in bgp_block %}
+
+   no network {{ network.prefix }}/{{ network.masklen }}
+
+      {% endif %}
+   {% endif %}
+
+{% elif state == 'present' %}
+   {# add the network #}
+   {% if network.routemap is defined %}
+
+   network {{ network.prefix }}/{{ network.masklen }} route-map {{ network.routemap }}
+
+   {% else %}
+
+   network {{ network.prefix }}/{{ network.masklen }}
+
+   {% endif %}
+
+{% endif %}

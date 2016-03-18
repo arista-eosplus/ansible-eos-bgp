@@ -1,0 +1,41 @@
+! templates/bgp_purge_neighbors.j2
+#jinja2: trim_blocks: False
+#jinja2: lstrip_blocks: False
+
+{% set bgp_as = bgp.bgp_as %}
+
+{# get the current router bgp config block #}
+{% set bgp_block = _eos_config | config_block("router bgp %s" % bgp_as, indent=3) %}
+
+{% if not bgp_block %}
+   {# if the bgp router is not configured, we have a problem
+   {# the line below will force an error on the task, but
+   {# technically should not happen #}
+   {{ "Error configuring bgp neighbors: bgp config block not found" }}
+
+{% else %}
+   {# find all the currently set neighbors #}
+   {% set match = bgp_block | join('\n') | re_findall("^neighbor ([\d\.]+) remote-as \d+") %}
+
+   {# if no match found, nothing to purge, otherwise... #}
+   {% if match %}
+
+router bgp {{ bgp_as }}
+
+      {# build a list of neighbors from the bgp block #}
+      {% set nbor_list = [] %}
+      {% for nbor in bgp.neighbors %}
+         {% if nbor.name is defined %}
+            {# assignment to an unused variable to append the list #}
+            {% set dump = nbor_list.append("%s" % nbor.name) %}
+         {% endif %}
+      {% endfor %}
+
+      {% set purge_list = match | difference(nbor_list) %}
+      {% for purge in purge_list %}
+
+      no neighbor {{ purge }}
+
+      {% endfor %}
+   {% endif %}
+{% endif %}

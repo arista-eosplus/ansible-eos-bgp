@@ -1,0 +1,115 @@
+! templates/bgp.j2
+#jinja2: trim_blocks: False
+#jinja2: lstrip_blocks: False
+
+{% set bgp_as = bgp.bgp_as %}
+
+{# pull in any missing default parameters for bgp by updating
+{# the default dictionary with the input dictionary, then assigning
+{# it back to the bgp variable #}
+{% set dump = bgp_defaults.update(bgp) %}
+{% set bgp = bgp_defaults %}
+
+{% set state = bgp.state %}
+
+{% set bgp_block = '' %}
+{% set bgp_as_now = _eos_config | re_search("^router bgp (\d+)$") %}
+{% if bgp_as_now %}
+   {% set bgp_as_now = bgp_as_now.group(1) | int %}
+   {% set bgp_block = _eos_config | config_block("router bgp %s" % bgp_as_now, indent=3) %}
+{% endif %}
+
+{% if state == 'absent' %}
+   {% if bgp_block %}
+
+no router bgp
+
+   {% endif %}
+{% elif state == 'present' %}
+   {% if bgp_as_now != bgp_as %}
+   {# current bgp as number is different than expected, reset router bgp #}
+
+no router bgp
+
+   {% endif %} {# if bgp_as_now != bgp_as #}
+   {# configure the bgp router #}
+
+router bgp {{ bgp_as }}
+
+   {# set maximum-paths #}
+   {% if bgp.maximum_paths %}
+      {% if bgp.maximum_ecmp_paths is defined %}
+
+   maximum-paths {{ bgp.maximum_paths }} ecmp {{ bgp.maximum_ecmp_paths }}
+
+      {% else %} {# bgp.maximum_ecmp_paths not defined #}
+         {# max ecmp paths not specified, but we can't know default because
+         {# it varies by architecture. get the current max ecmp path value
+         {# if bgp with matching as number was already configured. otherwise
+         {# do not specify ecmp to set default #}
+         {% if bgp_block and bgp_as_now == bgp_as %}
+            {% set match = bgp_block | join('\n') | re_search("maximum-paths \d+ ecmp (\d+)") %}
+            {% if match %}
+
+   maximum-paths {{ bgp.maximum_paths }} ecmp {{ match.group(1) }}
+
+            {% else %} {# if not match #}
+
+   maximum-paths {{ bgp.maximum_paths }}
+
+            {% endif %} {# if match #}
+         {% else %} {# if not bgp_block #}
+
+   maximum-paths {{ bgp.maximum_paths }}
+
+         {% endif %} {# if bgp_block (for max ecmp paths) #}
+      {% endif %} {# if bgp.maximum_ecmp_paths #}
+   {% endif %} {# if bgp.maximum_paths #}
+
+   {# set log-neighbor-changes #}
+   {% if bgp.log_neighbor_changes %}
+
+   bgp log-neighbor-changes
+
+   {% else %}
+
+   no bgp log-neighbor-changes
+
+   {% endif %}
+
+   {# set bgp timers #}
+
+   timers bgp {{ bgp.timers.keep_alive}} {{ bgp.timers.hold }}
+
+   {# set bgp listen ranges #}
+   {% if bgp.listeners is defined %}
+      {% for l in bgp.listeners %}
+
+   bgp listen range {{ l.name }} peer-group {{ l.peer_group }} remote-as {{ l.remote_as }}
+
+      {% endfor %}
+   {% endif %}
+
+   {# set router-id #}
+   {% if bgp.router_id is defined %}
+
+   router-id {{ bgp.router_id }}
+
+   {% else %} {# no bgp.router_id #}
+
+   no router-id
+
+   {% endif %} {# if bgp.router_id #}
+
+   {# set shutdown (enable) #}
+   {% if bgp.enable %}
+
+   no shutdown
+
+   {% else %} {# not bgp.enable #}
+
+   shutdown
+
+   {% endif %} {# if bgp.enable #}
+
+{% endif %}

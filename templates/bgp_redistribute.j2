@@ -1,0 +1,45 @@
+! templates/bgp_redistribute.j2
+#jinja2: trim_blocks: False
+#jinja2: lstrip_blocks: False
+
+{% set bgp_as = bgp.bgp_as %}
+
+{# pull in any missing default parameters for bgp by updating
+{# the default dictionary with the input dictionary, then assigning
+{# it back to the bgp variable #}
+{% set dump = bgp_defaults.update(bgp) %}
+{% set bgp = bgp_defaults %}
+
+{# enter the bgp configuration block #}
+
+router bgp {{ bgp_as }}
+
+{# configure the redistribute list #}
+
+{% set redst_all = ['connected', 'ospf', 'ospf match internal',
+                    'ospf match external', 'ospf match nssa-external',
+                    'ospf3', 'ospf3 match internal', 'ospf3 match external',
+                    'rip', 'static'] %}
+
+{# determine which types need to be disabled #}
+{% set disable = redst_all | difference(bgp.redistribute) %}
+{% set bgp_block = _eos_config | config_block("router bgp %s" % bgp_as, indent=3) %}
+{% for type in disable %}
+   {# only disable a redistribute type if it is already specified as
+   {# an enabled redistribute type in the config #}
+   {# the reason for this is that some types are mutually exclusive, and
+   {# if one type is enabled, the other will never appear either as
+   {# enabled or disabled #}
+   {% if "redistribute %s" % type in bgp_block %}
+
+   no redistribute {{ type }}
+
+   {% endif %}
+{% endfor %}
+
+{# enable the requested redistribute types #}
+{% for type in bgp.redistribute %}
+
+   redistribute {{ type }}
+
+{% endfor %}
