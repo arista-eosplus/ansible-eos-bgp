@@ -79,6 +79,41 @@ and ``eos_purge_bgp_neighbors`` objects described below:
 Note: Asterisk (*) denotes the default value if none specified
 ```
 
+Connection Variables
+--------------------
+
+Ansible EOS roles require the following connection information to establish
+communication with the nodes in your inventory. This information can exist in
+the Ansible group_vars or host_vars directories, or in the playbook itself.
+
+|         Key | Required | Choices    | Description                              |
+| ----------: | -------- | ---------- | ---------------------------------------- |
+|        host | yes      |            | Specifies the DNS host name or address for connecting to the remote device over the specified *transport*. The value of *host* is used as the destination address for the transport. |
+|        port | no       |            | Specifies the port to use when building the connection to the remote device. This value applies to either acceptable value of *transport*. The port value will default to the appropriate transport common port if none is provided in the task (cli=22, http=80, https=443). |
+|    username | no       |            | Configures the usename to use to authenticate the connection to the remote device.  The value of *username* is used to authenticate either the CLI login or the eAPI authentication depending on which *transport* is used. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_USERNAME will be used instead. |
+|    password | no       |            | Specifies the password to use to authenticate the connection to the remote device. This is a common argument used for either acceptable value of *transport*. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_PASSWORD will be used instead. |
+| ssh_keyfile | no       |            | Specifies the SSH keyfile to use to authenticate the connection to the remote device. This argument is only used when *transport=cli*. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_SSH_KEYFILE will be used instead. |
+|   authorize | no       | yes, no*   | Instructs the module to enter priviledged mode on the remote device before sending any commands. If not specified, the device will attempt to excecute all commands in non-priviledged mode. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_AUTHORIZE will be used instead. |
+|   auth_pass | no       |            | Specifies the password to use if required to enter privileged mode on the remote device.  If *authorize=no*, then this argument does nothing. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_AUTH_PASS will be used instead. |
+|   transport | yes      | cli*, eapi | Configures the transport connection to use when connecting to the remote device. The *transport* argument supports connectivity to the device over cli (ssh) or eapi. |
+|     use_ssl | no       | yes*, no   | Configures the transport to use SSL if set to true only when *transport=eapi*.  If *transport=cli*, this value is ignored. |
+|    provider | no       |            | Convience method that allows all the above connection arguments to be passed as a dict object. All constraints (required, choices, etc) must be met either by individual arguments or values in this dict. |
+
+```
+Note: Asterisk (*) denotes the default value if none specified
+```
+
+Ansible Variables
+-----------------
+
+|    Key | Choices      | Description                              |
+| -----: | ------------ | ---------------------------------------- |
+| no_log | true, false* | Prevents module arguments and output from being logged during the playbook execution. By default, no_log is set to true for tasks that gather and save EOS configuration information to reduce output size. Set to true to prevent all output other than task results. |
+
+```
+Note: Asterisk (*) denotes the default value if none specified
+```
+
 Dependencies
 ------------
 
@@ -105,6 +140,14 @@ Sample hosts file:
     leaf1.example.com
 
 Sample host_vars/leaf1.example.com
+
+    provider:
+      host: "{{ inventory_hostname }}"
+      username: admin
+      password: admin
+      use_ssl: no
+      authorize: yes
+      transport: cli
 
     bgp:
       enable: true
