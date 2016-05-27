@@ -2,23 +2,23 @@
 - name: Gather EOS configuration
   eos_command:
     commands: 'show running-config all'
-    provider: "{{ provider|default(omit) }}"
-    auth_pass: "{{ auth_pass|default(omit) }}"
-    authorize: "{{ authorize|default(omit) }}"
-    host: "{{ host|default(omit) }}"
-    password: "{{ password|default(omit) }}"
-    port: "{{ port|default(omit) }}"
+    provider: "{{ provider | default(omit) }}"
+    auth_pass: "{{ auth_pass | default(omit) }}"
+    authorize: "{{ authorize | default(omit) }}"
+    host: "{{ host | default(omit) }}"
+    password: "{{ password | default(omit) }}"
+    port: "{{ port | default(omit) }}"
     transport: 'cli'
-    use_ssl: "{{ use_ssl|default(omit) }}"
-    username: "{{ username|default(omit) }}"
+    use_ssl: "{{ use_ssl | default(omit) }}"
+    username: "{{ username | default(omit) }}"
   register: output
-  no_log: "{{ no_log|default(true) }}"
+  no_log: "{{ no_log | default(true) }}"
   when: _eos_config is not defined
 
 - name: Save EOS configuration
   set_fact:
     _eos_config: "{{ output.stdout[0] }}"
-  no_log: "{{ no_log|default(true) }}"
+  no_log: "{{ no_log | default(true) }}"
   when: _eos_config is not defined
 
 - name: Arista EOS BGP resources
@@ -46,22 +46,22 @@
   - name: Gather EOS configuration
     eos_command:
       commands: 'show running-config all'
-      provider: "{{ provider|default(omit) }}"
-      auth_pass: "{{ auth_pass|default(omit) }}"
-      authorize: "{{ authorize|default(omit) }}"
-      host: "{{ host|default(omit) }}"
-      password: "{{ password|default(omit) }}"
-      port: "{{ port|default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
       transport: 'cli'
-      use_ssl: "{{ use_ssl|default(omit) }}"
-      username: "{{ username|default(omit) }}"
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
     register: output
-    no_log: "{{ no_log|default(true) }}"
+    no_log: "{{ no_log | default(true) }}"
 
   - name: Save EOS configuration
     set_fact:
       _eos_config: "{{ output.stdout[0] }}"
-    no_log: "{{ no_log|default(true) }}"
+    no_log: "{{ no_log | default(true) }}"
 
   when: bgp_result | changed
 
