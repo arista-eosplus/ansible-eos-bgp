@@ -1,0 +1,9 @@
+---
+defaults:
+  module: bgp
+
+testcases:
+  - name: XXX add test cases
+    arguments:
+    setup: |
+    present: |
