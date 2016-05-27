@@ -1,0 +1,38 @@
+- hosts: test_hosts
+  gather_facts: no
+  connection: local
+
+  vars:
+    module: ''
+
+  tasks:
+    # Call the eos_command module if module is set to eos_command
+    - name: "{{ description | default('command playbook task') }}"
+      eos_command:
+        commands: "{{ cmds | default(omit) }}"
+        auth_pass: "{{ auth_pass | default(omit) }}"
+        authorize: "{{ authorize | default(omit) }}"
+        host: "{{ host | default(omit) }}"
+        password: "{{ password | default(omit) }}"
+        port: "{{ port | default(omit) }}"
+        provider: "{{ provider | default(omit) }}"
+        transport: "cli"
+        use_ssl: "{{ use_ssl | default(omit) }}"
+        username: "{{ username | default(omit) }}"
+      when: module == 'eos_command'
+
+    # Call the eos_template module if module is set to eos_template
+    - name: "{{ description | default('template playbook task') }}"
+      eos_template:
+        src: "{{ src | default(omit) }}"
+        include_defaults: true
+        auth_pass: "{{ auth_pass | default(omit) }}"
+        authorize: "{{ authorize | default(omit) }}"
+        host: "{{ host | default(omit) }}"
+        password: "{{ password | default(omit) }}"
+        port: "{{ port | default(omit) }}"
+        provider: "{{ provider | default(omit) }}"
+        transport: "cli"
+        use_ssl: "{{ use_ssl | default(omit) }}"
+        username: "{{ username | default(omit) }}"
+      when: module == 'eos_template'
