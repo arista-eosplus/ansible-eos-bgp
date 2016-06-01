@@ -1,0 +1,180 @@
+---
+defaults:
+  module: bgp_networks
+
+testcases:
+  - name: Create bgp with network settings
+    changed: 2
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 141
+        router_id: 41.41.41.41
+        networks:
+          - prefix: 10.10.0.0
+            masklen: 16
+            routemap: testmap
+          - prefix: 10.11.0.0
+            masklen: 16
+            state: present
+          - prefix: 10.5.0.0
+            masklen: 16
+            state: absent
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 141
+         no shutdown
+         router-id 41.41.41.41
+         network 10.10.0.0/16 route-map testmap
+         network 10.11.0.0/16
+    absent: |
+      router bgp 141
+         network 10.5.0.0/16
+
+  - name: Modify bgp with network settings
+    changed: 2
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 141
+        router_id: 41.41.41.41
+        networks:
+          - prefix: 10.10.0.0
+            masklen: 16
+            routemap: testmap
+          - prefix: 10.11.0.0
+            masklen: 16
+            state: present
+          - prefix: 10.12.0.0
+            masklen: 16
+            routemap: testmap
+            state: present
+          - prefix: 10.5.0.0
+            masklen: 16
+            state: absent
+          - prefix: 10.6.0.0
+            masklen: 16
+            routemap: nomap
+            state: absent
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 141
+      router-id 14.14.14.14
+      network 10.10.0.0/16 route-map nomap
+      network 10.11.0.0/16 route-map nomap
+      network 10.12.0.0/16
+      network 10.5.0.0/16
+      network 10.6.0.0/16 route-map nomap
+    present: |
+      router bgp 141
+         no shutdown
+         router-id 41.41.41.41
+         network 10.10.0.0/16 route-map testmap
+         network 10.11.0.0/16
+         network 10.12.0.0/16 route-map testmap
+    absent: |
+      router bgp 141
+         network 10.10.0.0/16 route-map nomap
+         network 10.11.0.0/16 route-map nomap
+         network 10.12.0.0/16
+         network 10.5.0.0/16
+         network 10.6.0.0/16 route-map nomap
+
+  - name: Modify and purge bgp networks
+    changed: 3
+    arguments:
+      eos_purge_bgp_networks: yes
+      bgp:
+        enable: true
+        bgp_as: 143
+        router_id: 43.43.43.43
+        networks:
+          - prefix: 10.10.0.0
+            masklen: 16
+            routemap: testmap
+          - prefix: 10.11.0.0
+            masklen: 16
+            state: present
+          - prefix: 10.12.0.0
+            masklen: 16
+            routemap: testmap
+            state: present
+          - prefix: 10.5.0.0
+            masklen: 16
+            state: absent
+          - prefix: 10.6.0.0
+            masklen: 16
+            routemap: nomap
+            state: absent
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 143
+      router-id 14.14.14.14
+      network 10.10.0.0/16 route-map nomap
+      network 10.11.0.0/16 route-map nomap
+      network 10.12.0.0/16
+      network 10.5.0.0/16 route-map nomap
+      network 10.6.0.0/16 route-map nomap
+      network 10.20.0.0/16
+      network 10.30.0.0/16 route-map nomap
+    present: |
+      router bgp 143
+         no shutdown
+         router-id 43.43.43.43
+         network 10.10.0.0/16 route-map testmap
+         network 10.11.0.0/16
+         network 10.12.0.0/16 route-map testmap
+    absent: |
+      router bgp 143
+         network 10.10.0.0/16 route-map nomap
+         network 10.11.0.0/16 route-map nomap
+         network 10.12.0.0/16
+         network 10.5.0.0/16 route-map nomap
+         network 10.6.0.0/16 route-map nomap
+         network 10.20.0.0/16
+         network 10.30.0.0/16 route-map nomap
+
+  - name: Remove bgp with network settings defined
+    changed: 1
+    arguments:
+      bgp:
+        state: absent
+        enable: true
+        bgp_as: 144
+        router_id: 44.44.44.44
+        networks:
+          - prefix: 10.10.0.0
+            masklen: 16
+            routemap: testmap
+          - prefix: 10.11.0.0
+            masklen: 16
+            state: present
+          - prefix: 10.12.0.0
+            masklen: 16
+            routemap: testmap
+            state: present
+          - prefix: 10.5.0.0
+            masklen: 16
+            state: absent
+          - prefix: 10.6.0.0
+            masklen: 16
+            routemap: nomap
+            state: absent
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 144
+      router-id 44.44.44.44
+      network 10.10.0.0/16 route-map nomap
+      network 10.11.0.0/16 route-map nomap
+      network 10.12.0.0/16
+      network 10.5.0.0/16 route-map nomap
+      network 10.6.0.0/16 route-map nomap
+      network 10.20.0.0/16
+      network 10.30.0.0/16 route-map nomap
+    absent: |
+      router bgp 144

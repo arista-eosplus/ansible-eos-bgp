@@ -1,0 +1,126 @@
+---
+defaults:
+  module: bgp_redistribute
+
+testcases:
+  - name: Create bgp with redistribute settings
+    changed: 2
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 121
+        router_id: 21.21.21.21
+        maximum_paths: 3
+        maximum_ecmp_paths: 14
+        redistribute:
+          - connected
+          - ospf
+          - ospf3
+        log_neighbor_changes: yes
+        timers:
+          keep_alive: 0
+          hold: 0
+        listeners:
+          - name: 10.1.0.0/16
+            peer_group: demoleaf
+            remote_as: 65003
+          - name: 10.2.0.0/16
+            peer_group: demoleaf2
+            remote_as: 65004
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 121
+         no shutdown
+         router-id 21.21.21.21
+         maximum-paths 3 ecmp 14
+         bgp log-neighbor-changes
+         timers bgp 0 0
+         bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 65003
+         bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
+         redistribute connected
+         redistribute ospf
+         redistribute ospf3
+         no redistribute ospf match external
+         no redistribute ospf match nssa-external
+         no redistribute ospf3 match external
+         no redistribute rip
+         no redistribute static
+
+  - name: Modify bgp with redistribute settings
+    changed: 2
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 122
+        router_id: 22.22.22.22
+        maximum_paths: 3
+        maximum_ecmp_paths: 14
+        redistribute:
+          - ospf match internal
+          - ospf3 match internal
+          - rip
+        log_neighbor_changes: yes
+        timers:
+          keep_alive: 0
+          hold: 0
+        listeners:
+          - name: 10.1.0.0/16
+            peer_group: demoleaf
+            remote_as: 65003
+          - name: 10.2.0.0/16
+            peer_group: demoleaf2
+            remote_as: 65004
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 122
+       router-id 22.22.22.22
+       maximum-paths 6 ecmp 16
+       bgp log-neighbor-changes
+       bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
+       redistribute connected
+       redistribute ospf match external
+    present: |
+      router bgp 122
+         no shutdown
+         router-id 22.22.22.22
+         maximum-paths 3 ecmp 14
+         bgp log-neighbor-changes
+         timers bgp 0 0
+         bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 65003
+         bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
+         no redistribute connected
+         redistribute ospf match internal
+         redistribute ospf3 match internal
+         no redistribute ospf match external
+         no redistribute ospf match nssa-external
+         no redistribute ospf3 match external
+         redistribute rip
+         no redistribute static
+
+  - name: Remove bgp with redistribute settings defined
+    changed: 1
+    arguments:
+      bgp:
+        state: absent
+        enable: true
+        bgp_as: 123
+        redistribute:
+          - connected
+          - aggregate
+          - ospf
+          - ospf3
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 123
+      router-id 23.23.23.23
+      maximum-paths 6 ecmp 16
+      bgp log-neighbor-changes
+      bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
+      redistribute connected
+      redistribute ospf match external
+    absent: |
+      router bgp 123

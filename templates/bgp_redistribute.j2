@@ -24,22 +24,26 @@ router bgp {{ bgp_as }}
 {# determine which types need to be disabled #}
 {% set disable = redst_all | difference(bgp.redistribute) %}
 {% set bgp_block = _eos_config | config_block("router bgp %s" % bgp_as, indent=3) %}
-{% for type in disable %}
-   {# only disable a redistribute type if it is already specified as
-   {# an enabled redistribute type in the config #}
-   {# the reason for this is that some types are mutually exclusive, and
-   {# if one type is enabled, the other will never appear either as
-   {# enabled or disabled #}
-   {% if "redistribute %s" % type in bgp_block %}
+{% if disable is defined %}
+   {% for type in disable %}
+      {# only disable a redistribute type if it is already specified as
+      {# an enabled redistribute type in the config #}
+      {# the reason for this is that some types are mutually exclusive, and
+      {# if one type is enabled, the other will never appear either as
+      {# enabled or disabled #}
+      {% if "redistribute %s" % type in bgp_block %}
 
    no redistribute {{ type }}
 
-   {% endif %}
-{% endfor %}
+      {% endif %}
+   {% endfor %}
+{% endif %}
 
 {# enable the requested redistribute types #}
-{% for type in bgp.redistribute %}
+{% if bgp.redistribute is defined %}
+   {% for type in bgp.redistribute %}
 
    redistribute {{ type }}
 
-{% endfor %}
+   {% endfor %}
+{% endif %}
