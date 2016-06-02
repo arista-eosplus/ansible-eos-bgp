@@ -1,4 +1,3 @@
-
 Arista Roles for Ansible - Development Guidelines
 =================================================
 
@@ -8,10 +7,9 @@ Arista Roles for Ansible - Development Guidelines
    * [Overview] (#overview)
    * [Details] (#details)
 2. [Developing Arista Roles For Ansible] (#developing-arista-roles-for-ansible)
-   * [Role Development Guidelines] (#role-development-guidelines)
-   * [Role Test Development] (#role-test-development)
-   * [Development for arista-ansible-role-test] (#Development for arista-ansible-role-test)
-
+    * [Role Development Guidelines] (#role-development-guidelines)
+    * [Role Test Development] (#role-test-development)
+    * [Development for arista-ansible-role-test] (#Development for arista-ansible-role-test)
 
 
 Running role tests
