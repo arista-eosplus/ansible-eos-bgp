@@ -1,0 +1,299 @@
+---
+defaults:
+  module: bgp_neighbors
+
+testcases:
+  - name: Create bgp with neighbor settings
+    changed: 2
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 131
+        router_id: 31.31.31.31
+        log_neighbor_changes: yes
+        neighbors:
+          - name: 10.1.1.1
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: true
+            route_map_in: test_route
+            send_community: true
+            description: first neighbor
+          - name: 10.1.1.3
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: false
+            route_map_out: other_route
+            next_hop_self: true
+            description: second neighbor
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 131
+         no shutdown
+         router-id 31.31.31.31
+         bgp log-neighbor-changes
+         neighbor 10.1.1.1 remote-as 65002
+         neighbor 10.1.1.1 peer-group demoleaf
+         no neighbor 10.1.1.1 shutdown
+         neighbor 10.1.1.1 route-map test_route in
+         no neighbor 10.1.1.1 route-map out
+         neighbor 10.1.1.1 send-community
+         no neighbor 10.1.1.1 next-hop-self
+         neighbor 10.1.1.1 description first neighbor
+         neighbor 10.1.1.3 remote-as 65002
+         neighbor 10.1.1.3 peer-group demoleaf
+         neighbor 10.1.1.3 shutdown
+         no neighbor 10.1.1.3 route-map in
+         neighbor 10.1.1.3 route-map other_route out
+         no neighbor 10.1.1.3 send-community
+         neighbor 10.1.1.3 next-hop-self
+         neighbor 10.1.1.3 description second neighbor
+
+  - name: Modify bgp with neighbor settings
+    changed: 2
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 132
+        router_id: 32.32.32.32
+        log_neighbor_changes: no
+        neighbors:
+          - name: 10.1.1.1
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: true
+            route_map_in: test_route
+            send_community: true
+            description: first neighbor
+          - name: 10.1.1.3
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: false
+            route_map_out: other_route
+            next_hop_self: true
+            description: second neighbor
+          - name: 10.1.1.5
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: true
+            description: third neighbor
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 132
+      no shutdown
+      router-id 19.19.19.19
+      bgp log-neighbor-changes
+      neighbor 10.1.1.1 remote-as 64001
+      neighbor 10.1.1.1 peer-group firstpeer
+      neighbor 10.1.1.1 shutdown
+      no neighbor 10.1.1.1 route-map in
+      no neighbor 10.1.1.1 route-map out
+      neighbor 10.1.1.1 send-community
+      neighbor 10.1.1.1 next-hop-self
+      neighbor 10.1.1.1 description initial neighbor 64001
+      neighbor 10.1.1.3 remote-as 65002
+      neighbor 10.1.1.3 peer-group demoleaf
+      neighbor 10.1.1.3 shutdown
+      no neighbor 10.1.1.3 route-map in
+      neighbor 10.1.1.3 route-map other_route out
+      neighbor 10.1.1.3 send-community
+      no neighbor 10.1.1.3 next-hop-self
+      neighbor 10.1.1.3 description initial second neighbor
+      neighbor 10.1.1.7 remote-as 65002
+      neighbor 10.1.1.7 peer-group demoleaf
+      no neighbor 10.1.1.7 shutdown
+      no neighbor 10.1.1.7 route-map in
+      no neighbor 10.1.1.7 route-map out
+      no neighbor 10.1.1.7 send-community
+      no neighbor 10.1.1.7 next-hop-self
+      neighbor 10.1.1.7 description fourth neighbor
+    present: |
+      router bgp 132
+         no shutdown
+         router-id 32.32.32.32
+         no bgp log-neighbor-changes
+         neighbor 10.1.1.1 remote-as 65002
+         neighbor 10.1.1.1 peer-group demoleaf
+         no neighbor 10.1.1.1 shutdown
+         neighbor 10.1.1.1 route-map test_route in
+         no neighbor 10.1.1.1 route-map out
+         neighbor 10.1.1.1 send-community
+         no neighbor 10.1.1.1 next-hop-self
+         neighbor 10.1.1.1 description first neighbor
+         neighbor 10.1.1.3 remote-as 65002
+         neighbor 10.1.1.3 peer-group demoleaf
+         neighbor 10.1.1.3 shutdown
+         no neighbor 10.1.1.3 route-map in
+         neighbor 10.1.1.3 route-map other_route out
+         no neighbor 10.1.1.3 send-community
+         neighbor 10.1.1.3 next-hop-self
+         neighbor 10.1.1.3 description second neighbor
+         neighbor 10.1.1.5 remote-as 65002
+         neighbor 10.1.1.5 peer-group demoleaf
+         no neighbor 10.1.1.5 shutdown
+         no neighbor 10.1.1.5 route-map in
+         no neighbor 10.1.1.5 route-map out
+         no neighbor 10.1.1.5 send-community
+         no neighbor 10.1.1.5 next-hop-self
+         neighbor 10.1.1.5 description third neighbor
+         neighbor 10.1.1.7 remote-as 65002
+         neighbor 10.1.1.7 peer-group demoleaf
+         no neighbor 10.1.1.7 shutdown
+         no neighbor 10.1.1.7 route-map in
+         no neighbor 10.1.1.7 route-map out
+         no neighbor 10.1.1.7 send-community
+         no neighbor 10.1.1.7 next-hop-self
+         neighbor 10.1.1.7 description fourth neighbor
+
+  - name: Modify and purge bgp neighbors
+    changed: 3
+    arguments:
+      eos_purge_bgp_neighbors: yes
+      bgp:
+        enable: true
+        bgp_as: 133
+        router_id: 33.33.33.33
+        log_neighbor_changes: no
+        neighbors:
+          - name: 10.1.1.1
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: true
+            route_map_in: test_route
+            send_community: true
+            description: first neighbor
+          - name: 10.1.1.3
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: false
+            route_map_out: other_route
+            next_hop_self: true
+            description: second neighbor
+          - name: 10.1.1.5
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: true
+            description: third neighbor
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 133
+      no shutdown
+      router-id 19.19.19.19
+      bgp log-neighbor-changes
+      neighbor 10.1.1.1 remote-as 64001
+      neighbor 10.1.1.1 peer-group firstpeer
+      neighbor 10.1.1.1 shutdown
+      no neighbor 10.1.1.1 route-map in
+      no neighbor 10.1.1.1 route-map out
+      neighbor 10.1.1.1 send-community
+      neighbor 10.1.1.1 next-hop-self
+      neighbor 10.1.1.1 description initial neighbor 64001
+      neighbor 10.1.1.3 remote-as 65002
+      neighbor 10.1.1.3 peer-group demoleaf
+      neighbor 10.1.1.3 shutdown
+      no neighbor 10.1.1.3 route-map in
+      neighbor 10.1.1.3 route-map other_route out
+      neighbor 10.1.1.3 send-community
+      no neighbor 10.1.1.3 next-hop-self
+      neighbor 10.1.1.3 description initial second neighbor
+      neighbor 10.1.1.7 remote-as 65002
+      neighbor 10.1.1.7 peer-group demoleaf
+      no neighbor 10.1.1.7 shutdown
+      no neighbor 10.1.1.7 route-map in
+      no neighbor 10.1.1.7 route-map out
+      no neighbor 10.1.1.7 send-community
+      no neighbor 10.1.1.7 next-hop-self
+      neighbor 10.1.1.7 description fourth neighbor
+    present: |
+      router bgp 133
+         no shutdown
+         router-id 33.33.33.33
+         no bgp log-neighbor-changes
+         neighbor 10.1.1.1 remote-as 65002
+         neighbor 10.1.1.1 peer-group demoleaf
+         no neighbor 10.1.1.1 shutdown
+         neighbor 10.1.1.1 route-map test_route in
+         no neighbor 10.1.1.1 route-map out
+         neighbor 10.1.1.1 send-community
+         no neighbor 10.1.1.1 next-hop-self
+         neighbor 10.1.1.1 description first neighbor
+         neighbor 10.1.1.3 remote-as 65002
+         neighbor 10.1.1.3 peer-group demoleaf
+         neighbor 10.1.1.3 shutdown
+         no neighbor 10.1.1.3 route-map in
+         neighbor 10.1.1.3 route-map other_route out
+         no neighbor 10.1.1.3 send-community
+         neighbor 10.1.1.3 next-hop-self
+         neighbor 10.1.1.3 description second neighbor
+         neighbor 10.1.1.5 remote-as 65002
+         neighbor 10.1.1.5 peer-group demoleaf
+         no neighbor 10.1.1.5 shutdown
+         no neighbor 10.1.1.5 route-map in
+         no neighbor 10.1.1.5 route-map out
+         no neighbor 10.1.1.5 send-community
+         no neighbor 10.1.1.5 next-hop-self
+         neighbor 10.1.1.5 description third neighbor
+    absent: |
+      router bgp 133
+         neighbor 10.1.1.7 remote-as 65002
+         neighbor 10.1.1.7 peer-group demoleaf
+         no neighbor 10.1.1.7 shutdown
+         no neighbor 10.1.1.7 route-map in
+         no neighbor 10.1.1.7 route-map out
+         no neighbor 10.1.1.7 send-community
+         no neighbor 10.1.1.7 next-hop-self
+         neighbor 10.1.1.7 description fourth neighbor
+
+  - name: Remove bgp with neighbor settings defined
+    changed: 1
+    arguments:
+      bgp:
+        state: absent
+        enable: true
+        bgp_as: 134
+        router_id: 34.34.34.34
+        log_neighbor_changes: yes
+        neighbors:
+          - name: 10.1.1.1
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: true
+            route_map_in: test_route
+            send_community: true
+            description: first neighbor
+          - name: 10.1.1.3
+            remote_as: 65002
+            peer_group: demoleaf
+            enable: false
+            route_map_out: other_route
+            next_hop_self: true
+            description: second neighbor
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 134
+      no shutdown
+      router-id 34.34.34.34
+      bgp log-neighbor-changes
+      neighbor 10.1.1.1 remote-as 65002
+      neighbor 10.1.1.1 peer-group demoleaf
+      no neighbor 10.1.1.1 shutdown
+      neighbor 10.1.1.1 route-map test_route in
+      no neighbor 10.1.1.1 route-map out
+      neighbor 10.1.1.1 send-community
+      no neighbor 10.1.1.1 next-hop-self
+      neighbor 10.1.1.1 description first neighbor
+      neighbor 10.1.1.3 remote-as 65002
+      neighbor 10.1.1.3 peer-group demoleaf
+      neighbor 10.1.1.3 shutdown
+      no neighbor 10.1.1.3 route-map in
+      neighbor 10.1.1.3 route-map other_route out
+      no neighbor 10.1.1.3 send-community
+      neighbor 10.1.1.3 next-hop-self
+      neighbor 10.1.1.3 description second neighbor
+    absent: |
+      router bgp 134

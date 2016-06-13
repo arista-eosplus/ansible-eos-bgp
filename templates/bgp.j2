@@ -84,9 +84,21 @@ router bgp {{ bgp_as }}
    {# set bgp listen ranges #}
    {% if bgp.listeners is defined %}
       {% for l in bgp.listeners %}
+         {% set range = "bgp listen range %s" % l.name %}
+         {% set bgp_listen_range = "%s peer-group %s remote-as %s" % (range, l.peer_group, l.remote_as) %}
+         {% set match = bgp_block | join('\n') | re_search("%s peer-group \S+ remote-as \d+" % range) %}
+         {% if match %}
+            {% if match.group(0) != bgp_listen_range %}
 
-   bgp listen range {{ l.name }} peer-group {{ l.peer_group }} remote-as {{ l.remote_as }}
+   no {{ match.group(0) }}
+   {{ bgp_listen_range }}
 
+            {% endif %}
+         {% else %}
+
+   {{ bgp_listen_range }}
+
+         {% endif %}
       {% endfor %}
    {% endif %}
 

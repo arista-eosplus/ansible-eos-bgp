@@ -188,6 +188,16 @@ A simple playbook to configure BGP, leaf.yml
 Then run with:
 
     ansible-playbook -i hosts leaf.yml
+    
+
+Developer Information
+------------
+
+Development contributions are welcome. Please see
+[test/arista-ansible-role-test/README]
+(https://github.com/arista-eosplus/arista-ansible-role-test/blob/master/README.md)
+for additional information, including running role tests for development.
+
 
 License
 -------

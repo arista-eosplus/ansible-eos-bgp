@@ -1,0 +1,172 @@
+---
+defaults:
+  module: bgp
+
+testcases:
+  - name: Create basic bgp (bgp enabled)
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 111
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 111
+         no shutdown
+         no router-id
+         maximum-paths 1 ecmp 128
+         bgp log-neighbor-changes
+         timers bgp 60 180
+
+  - name: Create basic bgp (bgp disabled)
+    arguments:
+      bgp:
+        enable: false
+        bgp_as: 112
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 112
+         shutdown
+         no router-id
+         maximum-paths 1 ecmp 128
+         bgp log-neighbor-changes
+         timers bgp 60 180
+
+  - name: Create bgp with non-defaults
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 113
+        router_id: 13.13.13.13
+        maximum_paths: 3
+        maximum_ecmp_paths: 14
+        log_neighbor_changes: yes
+        timers:
+          keep_alive: 0
+          hold: 0
+        listeners:
+          - name: 10.1.0.0/16
+            peer_group: demoleaf
+            remote_as: 65003
+          - name: 10.2.0.0/16
+            peer_group: demoleaf2
+            remote_as: 65004
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 113
+         no shutdown
+         router-id 13.13.13.13
+         maximum-paths 3 ecmp 14
+         bgp log-neighbor-changes
+         timers bgp 0 0
+         bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 65003
+         bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
+
+  - name: Modify basic bgp (same AS number)
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 114
+        router_id: 14.14.14.14
+        maximum_paths: 3
+        maximum_ecmp_paths: 14
+        log_neighbor_changes: no
+        timers:
+          keep_alive: 10
+          hold: 60
+        listeners:
+          - name: 10.1.0.0/16
+            peer_group: demoleaf
+            remote_as: 65003
+          - name: 10.2.0.0/16
+            peer_group: demoleaf2
+            remote_as: 65004
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 114
+      router-id 19.19.19.19
+      bgp listen range 10.1.0.0/16 peer-group notdemoleaf remote-as 64003
+    present: |
+      router bgp 114
+         no shutdown
+         router-id 14.14.14.14
+         maximum-paths 3 ecmp 14
+         no bgp log-neighbor-changes
+         timers bgp 10 60
+         bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 65003
+         bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
+    absent: |
+      router bgp 114
+         bgp listen range 10.1.0.0/16 peer-group notdemoleaf remote-as 64003
+
+  - name: Modify basic bgp (change AS number)
+    arguments:
+      bgp:
+        enable: true
+        bgp_as: 115
+        router_id: 15.15.15.15
+        maximum_paths: 3
+        maximum_ecmp_paths: 14
+        log_neighbor_changes: no
+        timers:
+          keep_alive: 10
+          hold: 60
+        listeners:
+          - name: 10.1.0.0/16
+            peer_group: demoleaf
+            remote_as: 65003
+          - name: 10.2.0.0/16
+            peer_group: demoleaf2
+            remote_as: 65004
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 114
+      router-id 19.19.19.19
+      bgp listen range 10.1.0.0/16 peer-group notdemoleaf remote-as 64003
+    present: |
+      router bgp 115
+         no shutdown
+         router-id 15.15.15.15
+         maximum-paths 3 ecmp 14
+         no bgp log-neighbor-changes
+         timers bgp 10 60
+         bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 65003
+         bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
+    absent: |
+      router bgp 114
+
+  - name: Remove bgp by same AS number
+    arguments:
+      bgp:
+        state: absent
+        enable: true
+        bgp_as: 116
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 116
+      router-id 16.16.16.16
+      bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 64003
+    absent: |
+      router bgp 116
+
+  - name: Remove bgp by any AS number
+    arguments:
+      bgp:
+        state: absent
+        bgp_as: 1
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 117
+      router-id 17.17.17.17
+      bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 64003
+    absent: |
+      router bgp 117
