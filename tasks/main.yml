@@ -35,6 +35,7 @@
     transport: 'cli'
     use_ssl: "{{ use_ssl | default(omit) }}"
     username: "{{ username | default(omit) }}"
+  notify: save running config
   register: bgp_result
   when: bgp is defined and bgp.bgp_as is defined
 
@@ -83,6 +84,7 @@
       transport: 'cli'
       use_ssl: "{{ use_ssl | default(omit) }}"
       username: "{{ username | default(omit) }}"
+    notify: save running config
     register: bgp_neighbors_result
     when: bgp.enable is defined and bgp.enable and item.name is defined and
       (bgp.state is not defined or bgp.state == 'present')
@@ -102,6 +104,7 @@
       transport: 'cli'
       use_ssl: "{{ use_ssl | default(omit) }}"
       username: "{{ username | default(omit) }}"
+    notify: save running config
     register: bgp_networks_result
     when: bgp.enable is defined and bgp.enable and
       (bgp.state is not defined or bgp.state == 'present')
@@ -156,6 +159,7 @@
       transport: 'cli'
       use_ssl: "{{ use_ssl | default(omit) }}"
       username: "{{ username | default(omit) }}"
+    notify: save running config
     when: bgp.enable is defined and bgp.enable and
       (bgp.state is not defined or bgp.state == 'present')
 
@@ -173,6 +177,7 @@
       transport: 'cli'
       use_ssl: "{{ use_ssl | default(omit) }}"
       username: "{{ username | default(omit) }}"
+    notify: save running config
     when: bgp.enable is defined and bgp.enable and eos_purge_bgp_neighbors and
       (bgp.state is not defined or bgp.state == 'present')
 
@@ -190,6 +195,7 @@
       transport: 'cli'
       use_ssl: "{{ use_ssl | default(omit) }}"
       username: "{{ username | default(omit) }}"
+    notify: save running config
     when: bgp.enable is defined and bgp.enable and eos_purge_bgp_networks and
       (bgp.state is not defined or bgp.state == 'present')
 
