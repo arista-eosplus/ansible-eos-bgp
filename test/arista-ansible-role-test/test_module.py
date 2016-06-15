@@ -18,7 +18,8 @@ INVENTORY = 'test/fixtures/hosts'
 HERE = os.path.abspath(os.path.dirname(__file__))
 ROLE = re.match(
     r'^.*\/ansible-eos-([^/\s]+)\/test/arista-ansible-role-test$', HERE).group(1)
-CONFIG_BACKUP = '_eos_role_test_{}'.format(ROLE)
+RUN_CONFIG_BACKUP = '_eos_role_test_{}_running'.format(ROLE)
+START_CONFIG_BACKUP = '_eos_role_test_{}_startup'.format(ROLE)
 
 EOS_ROLE_PLAYBOOK = 'test/arista-ansible-role-test/eos_role.yml'
 EOS_MODULE_PLAYBOOK = 'test/arista-ansible-role-test/eos_module.yml'
@@ -275,7 +276,29 @@ def setup():
         'description': 'Back up running-config on node',
         'cmds': [
             'configure terminal',
-            'copy running-config {}'.format(CONFIG_BACKUP)
+            'copy running-config {}'.format(RUN_CONFIG_BACKUP)
+        ],
+    }
+    arguments = [json.dumps(args)]
+
+    ret_code, out, err = ansible_playbook(EOS_MODULE_PLAYBOOK,
+                                          arguments=arguments)
+
+    if ret_code != 0:
+        LOG.write(str(">> ansible-playbook {} stdout:\n".format(EOS_MODULE_PLAYBOOK), out))
+        LOG.write(str(">> ansible-playbook {} stddrr:\n".format(EOS_MODULE_PLAYBOOK), err))
+        teardown()
+        raise RuntimeError("Error in Test Suite Setup")
+
+    run_backup = "  Backing up startup-config on nodes ..."
+    print >> sys.stderr, run_backup
+    LOG.write('++ ' + run_backup.strip())
+    args = {
+        'module': 'eos_command',
+        'description': 'Back up startup-config on node',
+        'cmds': [
+            'configure terminal',
+            'copy startup-config {}'.format(START_CONFIG_BACKUP)
         ],
     }
     arguments = [json.dumps(args)]
@@ -333,9 +356,15 @@ def teardown():
                               "  - configure terminal\n"
                               "  - configure replace {}\n"
                               "  - delete {}\n"
-                              "{}".format(SEPARATOR, CONFIG_BACKUP,
-                                          CONFIG_BACKUP, SEPARATOR))
+                              "  - copy {} startup-config\n"
+                              "  - delete {}\n"
+                              "{}".format(SEPARATOR, RUN_CONFIG_BACKUP,
+                                          RUN_CONFIG_BACKUP,
+                                          START_CONFIG_BACKUP,
+                                          START_CONFIG_BACKUP, SEPARATOR))
     else:
+        # Restore the running-config on the nodes
+        # ---------------------------------------
         restore_backup = "  Restoring running-config on nodes ..."
         print >> sys.stderr, restore_backup
         LOG.write('++ ' + restore_backup.strip())
@@ -344,7 +373,8 @@ def teardown():
             'description': 'Restore running-config from backup',
             'cmds': [
                 'configure terminal',
-                'configure replace {}'.format(CONFIG_BACKUP),
+                'configure replace {}'.format(RUN_CONFIG_BACKUP),
+                'delete {}'.format(RUN_CONFIG_BACKUP),
             ],
         }
         arguments = [json.dumps(args)]
@@ -354,33 +384,39 @@ def teardown():
                                               arguments=arguments)
 
         if ret_code != 0:
-            msg = "Error replacing running-config on nodes\n" \
+            msg = "Error restoring running-config on nodes\n" \
                   "Running ansible-playbook {} -e {}\n" \
                   ">> stdout: {}\n" \
                   ">> stderr: {}\n".format(EOS_MODULE_PLAYBOOK, arguments, out, err)
             warnings.warn(msg)
 
-        delete_backup = "  Deleting backup config from nodes ..."
-        print >> sys.stderr, delete_backup
-        LOG.write('++ ' + delete_backup.strip())
+        # Restore the startup-config on the nodes
+        # ---------------------------------------
+        restore_backup = "  Restoring startup-config on nodes ..."
+        print >> sys.stderr, restore_backup
+        LOG.write('++ ' + restore_backup.strip())
         args = {
             'module': 'eos_command',
-            'description': 'Delete backup config file from node',
+            'description': 'Restore startup-config from backup',
             'cmds': [
-                'configure terminal', 'delete {}'.format(CONFIG_BACKUP)
+                'configure terminal',
+                'copy {} startup-config'.format(START_CONFIG_BACKUP),
+                'delete {}'.format(START_CONFIG_BACKUP),
             ],
         }
         arguments = [json.dumps(args)]
 
+        # ret_code, out, err = ansible_playbook(CMD_PLAY, arguments=arguments)
         ret_code, out, err = ansible_playbook(EOS_MODULE_PLAYBOOK,
                                               arguments=arguments)
 
         if ret_code != 0:
-            msg = "Error deleting backup config on nodes\n" \
+            msg = "Error restoring startup-config on nodes\n" \
                   "Running ansible-playbook {} -e {}\n" \
                   ">> stdout: {}\n" \
                   ">> stderr: {}\n".format(EOS_MODULE_PLAYBOOK, arguments, out, err)
             warnings.warn(msg)
+
 
     print >> sys.stderr, "  Teardown complete"
 
