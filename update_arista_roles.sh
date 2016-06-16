@@ -29,7 +29,7 @@ cwd=`pwd`
 
 for role in ${roles[@]}
 do
-    echo working on $role
+    echo Updating $role with the latest arista-ansible-role-test version
 
     # cd to the parent directory
     cd $cwd/..
