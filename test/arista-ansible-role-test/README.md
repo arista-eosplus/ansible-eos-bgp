@@ -4,19 +4,19 @@ Arista Roles for Ansible - Development Guidelines
 
 #### Table of Contents
 
-1. [Executing Test Cases for an Arista Ansible Role] (#executing-test-cases-for-an-arista-ansible-role)
-   * [Overview] (#overview)
-   * [Details] (#details)
-2. [Developing Arista Roles For Ansible] (#developing-arista-roles-for-ansible)
-   * [Preparing the Role Development Workspace] (#preparing-the-role-development-workspace)
-     * [Existing Role Development] (#existing-role-development)
-     * [New Arista Ansible role development] (#new-arista-ansible-role-development)
-   * [Role Development Guidelines] (#role-development-guidelines)
-     * [Define the role's task list] (#define-the-roles-task-list)
-     * [Implement jinja2 templates for the role's tasks] (#implement-jinja2-templates-for-the-roles-tasks)
-     * [Include supporting files and documentation] (#include-supporting-files-and-documentation)
-   * [Role Test Development] (#role-test-development)  
-   * [Development for arista-ansible-role-test] (#development-for-arista-ansible-role-test)
+* [Executing Test Cases for an Arista Ansible Role] (#executing-test-cases-for-an-arista-ansible-role)
+  * [Overview] (#overview)
+  * [Details] (#details)
+* [Developing Arista Roles For Ansible] (#developing-arista-roles-for-ansible)
+  * [Preparing the Role Development Workspace] (#preparing-the-role-development-workspace)
+    * [Existing Role Development] (#existing-role-development)
+    * [New Arista Ansible role development] (#new-arista-ansible-role-development)
+  * [Role Development Guidelines] (#role-development-guidelines)
+    * [Define the role's task list] (#define-the-roles-task-list)
+    * [Implement jinja2 templates for the role's tasks] (#implement-jinja2-templates-for-the-roles-tasks)
+    * [Include supporting files and documentation] (#include-supporting-files-and-documentation)
+  * [Role Test Development] (#role-test-development)  
+  * [Development for arista-ansible-role-test] (#development-for-arista-ansible-role-test)
 
 
 
@@ -131,8 +131,8 @@ From an existing Arista role, copy the following files into the new
 role's path, creating any missing directories as needed, and updating
 file information to match the new role:
 
-  - .gitignore
-  - Makefile*
+- .gitignore
+- Makefile*
   - files/README.md
   - filter_plugins/config_block.py
   - handlers/main.yml
@@ -236,7 +236,7 @@ return the following line.
   ```
   hostname <newhostname>
   ```
-  
+
 A template that would configure elements of a BGP setup would require indented
 information in addition to the initial `router bgp` call.
 
@@ -255,23 +255,25 @@ be sent to the device.
 To maintain consistency, please follow the following formatting guidelines
 for jinja2 templates included with Arista roles.
 
-  - Each template should contain the file name marker, and set trim_blocks and
+
+  * Each template should contain the file name marker, and set trim_blocks and
     lstrip_blocks to false at the top of the file
-  - Indentation should be 3 spaces for all lines in the file
-  - Jinja filter pipes should be surrounded by a single space
-  - Output lines from the template (the lines that will be returned and 
+  * Indentation should be 3 spaces for all lines in the file
+  * Jinja filter pipes should be surrounded by a single space
+  * Output lines from the template (the lines that will be returned and 
     compared with the stored config) should be preceeded and followed by
     a single blank line
-    - Multiple sequential output lines may be grouped and the entire
+    * Multiple sequential output lines may be grouped and the entire
       group enclosed by the single blank lines
-  - Comments that span multiple lines should have each line begin with 
+  * Comments that span multiple lines should have each line begin with 
     the Jinja2 comment delimiter
-    - The closing comment delimiter is only required on the last line
+    * The closing comment delimiter is only required on the last line
       of the multi-line comment
-  - Comments should be used liberally to provide clarification to 
+  * Comments should be used liberally to provide clarification to 
     the process taking place in the template
-    - Mark the end of for loops and if blocks where useful
-    - Explain the purpose of filters being used or sections of code
+    * Mark the end of for loops and if blocks where useful
+    * Explain the purpose of filters being used or sections of code
+
 
 Below is a short example of the formatting for a template file. Refer to 
 existing Arista roles template files for additional examples.
@@ -350,56 +352,99 @@ content examples, and sections that may be copied and pasted for ease.
 #### Role test development
 
 * Make sure the role's README.md file includes the **Developer Information**
-  section, which points to this document under the
-  <ansible-eos-role>/test/arista-ansible-role-test directory. This information
-  can be copied from an existing role's README file.
+  section, which points to this document under the role's 
+  test/arista-ansible-role-test directory. This information can be copied from
+  an existing role's README file.
 
 * Create a testcases directory for the role:
 
     ```
     --roletest-- >> mkdir -p test/testcases/
     ```
-    
+
 * Import the arista-ansible-role-test repository into the role as a subtree.
   From the root of the role directory, issue the following commands:
-
   * git remote add role-test https[]()://github.com/arista-eosplus/arista-ansible-role-test.git  
   * git subtree add --prefix=test/arista-ansible-role-test --squash role-test master  
 
-    ```
-    NOTE: These commands must be issued from a clean repo branch without any
-    pending changes or commits. The `git subtree add` command will generate
-    a commit to add the external repo to the working repository.
-    
-    --roletest-- >> git remote add role-test https://github.com/arista-eosplus/arista-ansible-role-test.git  
-    --roletest-- >> git subtree add --prefix=test/arista-ansible-role-test --squash role-test master  
-    git fetch role-test master  
-    warning: no common commits  
-    remote: Counting objects: 59, done.  
-    remote: Compressing objects: 100% (24/24), done.  
-    remote: Total 59 (delta 14), reused 0 (delta 0), pack-reused 35  
-    Unpacking objects: 100% (59/59), done.  
-    From https://github.com/arista-eosplus/arista-ansible-role-test  
-      * branch            master     -> FETCH_HEAD
-      * [new branch]      master     -> role-test/master
-    Added dir 'test/arista-ansible-role-test'  
-    ```
+
+      ```
+      NOTE: These commands must be issued from a clean repo branch without any
+      pending changes or commits. The `git subtree add` command will generate
+      a commit to add the external repo to the working repository.
+      
+      --roletest-- >> git remote add role-test https://github.com/arista-eosplus/arista-ansible-role-test.git  
+      --roletest-- >> git subtree add --prefix=test/arista-ansible-role-test --squash role-test master  
+      git fetch role-test master  
+      warning: no common commits  
+      remote: Counting objects: 59, done.  
+      remote: Compressing objects: 100% (24/24), done.  
+      remote: Total 59 (delta 14), reused 0 (delta 0), pack-reused 35  
+      Unpacking objects: 100% (59/59), done.  
+      From https://github.com/arista-eosplus/arista-ansible-role-test  
+      * branch            master     -> FETCH_HEAD  
+      * [new branch]      master     -> role-test/master  
+      Added dir 'test/arista-ansible-role-test'  
+      ```
 
 * Add test cases for the role:
 
-  Create a yml file for each group of test cases.
-  Each group test file name should reflect the type of tests being run in
-  that group. When a role contains several template modules, it is a good
-  idea to have at least one test group for each template. Templates that
+  Create a yml file for each group of test cases under the test/testcases
+  directory. Each group test file name should reflect the type of tests being
+  run in that group. When a role contains several template modules, it is a
+  good idea to have at least one test group for each template. Templates that
   perform multiple configuration changes may also be separated into several
   test group files.
 
-  Each test group file should contain a defaults section and a testcases
-  section. The defaults defines the module name reported by the test
-  framework, and this should be the same as the filename without an extension.
+  Each test group file must contain the ``defaults`` and ``testcases`` key words
+  described below.
 
+  **defaults** (dictionary) containing the following key:
 
-*XXX Information specific to writing test cases and ensuring the test framework has been included as a submodule goes here*
+  |    Key | Type              | Notes                                    |
+  | -----: | ----------------- | ---------------------------------------- |
+  | module | string (required) | The name of the test case file, without the .yml extension. This is used within the test framework to display the current test group information in the test suite output. |
+
+  **testcases** (list) each entry contains the following keys:
+
+  |       Key | Type                | Indentation | Notes                                    |
+  | --------: | ------------------- | :---------: | ---------------------------------------- |
+  |      name | string (required)   |     n/a     | The name of the test case, usually a brief description, such as "Modify and purge bgp neighbors" |
+  | arguments | list (required)     |     n/a     | The role-specific arguments that will be used within the test case. |
+  |     setup | yaml string literal |     no      | A list of setup commands to be run on each device before executing the test case. These setup commands are specific to one individual test case. This would be a list of commands as you would type them at the device console, without indentation. |
+  |  teardown | yaml string literal |     no      | A list of commands that will be run on each device after the test case is executed. These commands are specific to one individual test case. This is a list of commands as you would type them at the device console, without indentation |
+  |   present | yaml string literal |     yes     | A list of configuration entries that are expected to exist on the device after the the test case has executed the Ansible role. This list of configuration entries must be properly indented for matching against the current running-config on the device. |
+  |    absent | yaml string literal |     yes     | A list of configuration entries that are expected to not exist on the device after the test case has executed the Ansible role. This list of configuration entries must be properly indented for matching against the current running-config on the device. |
+
+  ```
+  NOTES:
+  * Test case examples are best seen by referring to the existing Arist roles
+    and their included testcase files.
+  * The yml string literal type used for the testcases 'setup', 'teardown',
+    'present', and 'absent' keys is given by the pipe character immediately
+    following the key, and no quotes are necessary:
+       
+        setup: |
+          no vlan 1003
+          vlan 1003
+          name initial vlan 1003
+          state suspend
+        present: |
+          vlan 1003
+             name vlan 1003 changed
+             state active
+        absent: |
+          vlan 1003
+             name initial vlan 1003
+             state suspend
+             
+  * Absent configurations may contain block headers that are present on the
+    device, with block content that should not exist. In the sample above,
+    the configuration block 'vlan 1003' is expected to exist on the device,
+    but the state and name of the vlan has changed, so the lines
+    'name initial vlan 1003' and 'state suspend' should not be present.
+    
+  ```
 
 #### Development for arista-ansible-role-test
 
@@ -410,7 +455,7 @@ outlined below, to make the propagation of the changes to the main
 framework repo as smooth as possible.
 
 For the purposes of the instructions below, `role repo` refers to the base 
-repository of the role being worked on (e.g. ansible-eos-vxlan), and
+repository of the role you are working on (e.g. ansible-eos-vxlan), and
 `framework repo` refers to the arista-ansible-role-test repository that was
 imported as a subtree, i.e. everything under the /test/arista-ansible-role-test
 directory in the role repo.
@@ -418,12 +463,13 @@ directory in the role repo.
 * Always make sure you have the latest changes for the framework repo
   in your local repository by issuing the command at the root of your role repo.
 
-      git subtree pull --prefix=test/arista-ansible-role-test --squash role-test master
+    ```
+    git subtree pull --prefix=test/arista-ansible-role-test --squash role-test master
+    ```
 
 * Please keep commits to files in the framework directory 
-  (test/arista-ansible-role-test) separate from commits to the rest
-  of the role repo. This helps keep commit messages specific
-  to the framework repo itself.
+  (test/arista-ansible-role-test) separate from commits to the rest of the role
+  repo. This helps keep commit messages specific to the framework repo itself.
 * Changes to the framework files must be committed to the role repo
   before being pushed to the framework repo. (git commit the framework 
   changes as part of the role repo before pushing the changes to the
@@ -433,11 +479,15 @@ directory in the role repo.
   the framework repo where the changes will be pushed. This branch will be
   created if it does not exist.
 
-      git subtree push --prefix=test/arista-ansible-role-test --squash role-test <branch>
-
-* Make a pull request for the changes by visiting the [framework repo website]
-  (https://github.com/arista-eosplus/arista-ansible-role-test.git). There
-  you may create a new pull request for the branch you pushed the changes to.
+    ```
+    git remote add role-test https://github.com/arista-eosplus/arista-ansible-role-test.git
+    git subtree push --prefix=test/arista-ansible-role-test --squash role-test <branch>
+    ```
+    
+* Make a pull request for the framework repo changes by visiting the
+  [framework repo website] (https://github.com/arista-eosplus/arista-ansible-role-test.git).
+  There you may create a new pull request for the branch created when you
+  pushed the changes to the framework repo.
 
 
 
