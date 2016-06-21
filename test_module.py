@@ -285,8 +285,8 @@ def setup():
                                           arguments=arguments)
 
     if ret_code != 0:
-        LOG.write(str(">> ansible-playbook {} stdout:\n".format(EOS_MODULE_PLAYBOOK), out))
-        LOG.write(str(">> ansible-playbook {} stddrr:\n".format(EOS_MODULE_PLAYBOOK), err))
+        LOG.write(">> ansible-playbook {} stdout:\n{}".format(EOS_MODULE_PLAYBOOK, out))
+        LOG.write(">> ansible-playbook {} stddrr:\n{}".format(EOS_MODULE_PLAYBOOK, err))
         teardown()
         raise RuntimeError("Error in Test Suite Setup")
 
@@ -307,8 +307,8 @@ def setup():
                                           arguments=arguments)
 
     if ret_code != 0:
-        LOG.write(str(">> ansible-playbook {} stdout:\n".format(EOS_MODULE_PLAYBOOK), out))
-        LOG.write(str(">> ansible-playbook {} stddrr:\n".format(EOS_MODULE_PLAYBOOK), err))
+        LOG.write(">> ansible-playbook {} stdout:\n{}".format(EOS_MODULE_PLAYBOOK, out))
+        LOG.write(">> ansible-playbook {} stddrr:\n{}".format(EOS_MODULE_PLAYBOOK, err))
         teardown()
         raise RuntimeError("Error in Test Suite Setup")
 
