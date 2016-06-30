@@ -42,3 +42,4 @@
     transport: 'cli'
     use_ssl: "{{ use_ssl|default(omit) }}"
     username: "{{ username|default(omit) }}"
+  when: eos_save_running_config
