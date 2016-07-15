@@ -79,6 +79,17 @@ and ``eos_purge_bgp_neighbors`` objects described below:
 Note: Asterisk (*) denotes the default value if none specified
 ```
 
+Configuration Variables
+-----------------------
+
+|                     Key | Choices      | Description                              |
+| ----------------------: | ------------ | ---------------------------------------- |
+| eos_save_running_config | true*, false | Specifies whether to write any changes to the running-config resulting from the role execution to memory, copying the configuration to the startup-config. |
+
+```
+Note: Asterisk (*) denotes the default value if none specified
+```
+
 Connection Variables
 --------------------
 
