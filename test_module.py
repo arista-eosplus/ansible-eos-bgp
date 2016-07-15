@@ -118,12 +118,22 @@ class TestModule(object):
                     format(desc, hostname)
                 )
                 assert device[hostname]['changed'] == True, msg
+
                 # Compare changes with expected values, sorted at global level
                 updates = '\n'.join(device[hostname]['updates'])
                 updates = re.split(r'\n(?=\S)', updates)
                 updates = '\n'.join(sorted(updates))
+                # The output from the playbook is sanitized - the phrase
+                # network-admin in username entries is changed to
+                # network-********. Replace the asterisks with admin again
+                # for matching the results.
+                updates = re.sub("username ([^\n]*) role network-\*{8}",
+                                 r'username \1 role network-admin',
+                                 updates)
+
                 absent = re.split(r'\n(?=\S)', self.testcase.absent.rstrip())
                 absent = '\n'.join(sorted(absent))
+
                 msg = ("{} - Some part of absent configuration found "
                        "on device '{}'".format(desc, hostname))
                 assert updates == absent, msg
