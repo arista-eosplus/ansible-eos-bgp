@@ -4,7 +4,7 @@
 
 {% set bgp_as = bgp.bgp_as %}
 
-{# pull in any missing default parameters for bgp networks by updating
+{# pull in any missing default parameters for bgp evpn by updating
 {# the default dictionary with the input dictionary, then assigning
 {# it back to the bgp network variable #}
 {% set dump = evpn_defaults.update(item) %}
@@ -21,7 +21,7 @@ router bgp {{ bgp_as }}
 
 {% if state == 'absent' %}
    {# remove the vlan if it exists #}
-   {% if "vlan %s" % (vlan.id) in bgp_block#}
+   {% if "vlan %s" % (vlan.id) in bgp_block %}
 
    no vlan {{ vlan.id }}
 
@@ -41,20 +41,60 @@ router bgp {{ bgp_as }}
 
       {# add the route-target if defined #}
       {% if vlan.route_target is definted %}
+          {% for item in vlan.route_target %}
 
-      route-target {{ vlan.route-target }}
+              {# loop through all the import targets #}
+              {%if item == "import" %}
+                 {%for import in item %}
 
-      {% else %}
+      route-target import {{ import }}
 
-      no route-target 
-       
-      {# add in redistribute learned if defined #}
-      {% if vlan.redistribute %}
-      
-      redistribute learned 
+                 {% endfor %}
+
+              {# loop through all the export targets #}
+              {% elif item == "export" %}
+                  {%for export in item %}
+
+      route-target export {{ export }}
+
+                  {% endfor %}
+
+              {% elif item == "both" %}
+                  {%for both in item %}
+
+      route-target both {{ both }}
+     
+                  {% endfor %}
+
+              {# remove all route-targets 3}
+              {% elif item ==  "none" %}
+
+       no route-target all
  
-      {% else %}
-      no redistribute learned
+              {% endif %}
+          {% endfor %}
+       {% endif %}
+       
+       {% if vlan.redistribute is defined %}
+       {# add the redistribute learned #}
+       
+       redistribute learned
+
+       {% else %}
+
+       no redistribute learned
+       
+       {% endif %
+       
+
+{%endif %}  
+
+
+
+
+     
+ 
+
 
 
 
