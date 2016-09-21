@@ -5,6 +5,7 @@ provider:
   host: "{{ inventory_hostname }}"
   username: admin
   password: admin
-  use_ssl: no
+  use_ssl: yes
   authorize: yes
-  transport: cli
+  transport: ssh 
+  validate_certs: false

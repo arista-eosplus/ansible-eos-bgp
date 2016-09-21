@@ -297,6 +297,7 @@ def setup():
     if ret_code != 0:
         LOG.write(">> ansible-playbook {} stdout:\n{}".format(EOS_MODULE_PLAYBOOK, out))
         LOG.write(">> ansible-playbook {} stddrr:\n{}".format(EOS_MODULE_PLAYBOOK, err))
+        print 'here'
         teardown()
         raise RuntimeError("Error in Test Suite Setup")
 
