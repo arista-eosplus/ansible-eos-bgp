@@ -1,0 +1,61 @@
+---
+defaults:
+  module: bgp_af
+
+testcases:
+  - name: Create all address families with 1 neighbor 
+    changed: 3 
+    arguments:
+      bgp:
+         enable: true
+         bgp_as: 18
+         vlans:
+           - id: 40
+             state: present
+             rd: "40:40"
+             route_target:
+               import: 
+                 - "1:1"
+                 - "100:100"
+               export: 
+                 - "2:2"
+               both: 
+                 - "3:3" 
+             redistribute: learned
+           - id: 50
+             rd: "50:50"
+             redistribute: learned
+         address_family:
+           - family: ipv4
+             state: present
+             neighbors:
+               state: activate
+               name: 10.10.10.10
+           - family: ipv6
+             state: present
+             neighbors:
+               state: activate
+               name:  2666::01
+           - family: evpn
+             state: present
+             neighbors:
+               state: activate
+               name: 1.1.1.1
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 18
+         vlan 40
+            rd 40:40
+            route-target import 1:1
+            route-target both 3:3
+            route-target import 100:100
+            route-target export 2:2
+            redistribute learned
+         !
+         vlan 50
+            rd 50:50
+            redistribute learned
+
+

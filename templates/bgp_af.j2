@@ -1,0 +1,51 @@
+! templates/bgp_af.j2
+#jinja2: trim_blocks: False
+#jinja2: lstrip_blocks: False
+
+{% set bgp_as = bgp.bgp_as %}
+
+{# pull in any missing default parameters for bgp evpn by updating
+{# the default dictionary with the input dictionary, then assigning
+{# it back to the af variable #}
+{% set dump = af_defaults.update(item) %}
+{% set af = af_defaults %}
+
+{% set family = af.family %}
+
+{# enter bgp configuration mode #}
+
+router bgp {{ bgp_as }}
+
+{# if state is absent remove the full address family #}
+{% if (state == "absent") %}
+
+   no address-family {{ af }}
+
+{% elif (state == "present") %}
+  
+   {# enter address-family config mode #}
+   {% if af is defined %}
+
+   address-family {{ af }}
+
+   {% endif %}
+   
+   {# loop through all neighbors for this type #}
+   {% for neighbor in af.neighbors %}
+  
+      {# if state is present else remove #}
+      {% if (neighbor.state == "activate") %}
+
+         neighbor {{ neighbor.name }} activate 
+
+      {% elif (neighbor.state == "deactivate") %}
+     
+         no neighbor {{ neighbor.name }} activate
+
+      {% endif %}
+   
+   {% endfor %} 
+
+{% endif %}
+
+
