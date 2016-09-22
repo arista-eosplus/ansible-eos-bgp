@@ -6,11 +6,10 @@
 
 {# pull in any missing default parameters for bgp evpn by updating
 {# the default dictionary with the input dictionary, then assigning
-{# it back to the bgp network variable #}
+{# it back to the bgp vlan variable #}
 {% set dump = evpn_defaults.update(item) %}
-{% set evpn = evpn_defaults %}
+{% set vlans = evpn_defaults %}
 
-{% set state = vlan.state %}
 
 {# get the current router bgp config block #}
 {% set bgp_block = _eos_config | config_block("router bgp %s" % bgp_as, indent=3) %}
@@ -19,82 +18,69 @@
 
 router bgp {{ bgp_as }}
 
-{% if state == 'absent' %}
-   {# remove the vlan if it exists #}
-   {% if "vlan %s" % (vlan.id) in bgp_block %}
+{% if (vlans.state == "absent") %}
+   {# remove the vlans if it exists #}
+   {% if "vlan %s" % (vlans.id) in bgp_block %}
 
-   no vlan {{ vlan.id }}
+   no vlan {{ vlans.id }}
 
    {% endif %}
 
-{% elif state == 'present' %}
-   {# add the vlan #}
-   vlan {{ vlan.id }}
-      {# add the rd if defined #}
-      {% if vlan.rd is definied %}
+{% elif (vlans.state == "present") %}
+   {% if vlans.id is defined %}
 
-      rd {{ vlan.rd }}
+   vlan {{ vlans.id }} 
+   
+      {# set the route-discriptor for this vlan #}
+      {% if vlans.rd is defined %}
+
+      rd {{ vlans.rd }}
+   
+      {% else %} 
+
+      no rd
+     
+      {% endif %} 
+
+         {# loop through the route-target types #}
+         {% for key, rd in vlans.route_target.iteritems() %}
+            {% for value in rd %}
+               {% if (key == "import") %}
+
+      route-target import {{ value }} 
+
+               {% elif (key == "export") %}
+
+      route-target export {{ value }}
+
+              {% elif (key == "both") %}
+
+      route-target both {{ value }}
+
+              {% elif (key == "none") %}
+
+      no route-target all
+
+              {% endif %}
+       
+            {% endfor %}  
+         
+         {% endfor %}
+
+      {# configure redistribute learned #}
+      {% if vlans.redistribute is defined %}
+         
+      redistribute learned 
 
       {% else %}
 
-      no rd 
+      no redistribute learned
 
-      {# add the route-target if defined #}
-      {% if vlan.route_target is definted %}
-          {% for item in vlan.route_target %}
+      {% endif %}
 
-              {# loop through all the import targets #}
-              {%if item == "import" %}
-                 {%for import in item %}
+   {% endif %}
 
-      route-target import {{ import }}
-
-                 {% endfor %}
-
-              {# loop through all the export targets #}
-              {% elif item == "export" %}
-                  {%for export in item %}
-
-      route-target export {{ export }}
-
-                  {% endfor %}
-
-              {% elif item == "both" %}
-                  {%for both in item %}
-
-      route-target both {{ both }}
-     
-                  {% endfor %}
-
-              {# remove all route-targets 3}
-              {% elif item ==  "none" %}
-
-       no route-target all
- 
-              {% endif %}
-          {% endfor %}
-       {% endif %}
-       
-       {% if vlan.redistribute is defined %}
-       {# add the redistribute learned #}
-       
-       redistribute learned
-
-       {% else %}
-
-       no redistribute learned
-       
-       {% endif %
-       
-
-{%endif %}  
-
-
-
-
-     
- 
-
+{% endif %} 
 
 
 
