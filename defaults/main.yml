@@ -22,5 +22,9 @@ evpn_defaults:
   state: present
   route_target: {}
 
+af_defaults:
+  state: present
+  neighbor: {state: activate}
+
 eos_purge_bgp_networks: no
 eos_purge_bgp_neighbors: no

@@ -110,10 +110,52 @@
       (bgp.state is not defined or bgp.state == 'present')
     with_items: "{{ bgp.networks | default([]) }}"
 
+  - name: Arista EOS BGP evpn setting
+    eos_template:
+      src: bgp_evpn.j2
+      include_defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    notify: save running config
+    register: bgp_evpn_result
+    when: bgp.enable is defined and bgp.enable and
+      (bgp.state is not defined or bgp.state == 'present')
+    with_items: "{{ bgp.vlans | default([]) }}"
+
+  - name: Arista EOS BGP address family setting
+    eos_template:
+      src: bgp_af.j2
+      include_defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    notify: save running config
+    register: bgp_af_result
+    when: bgp.enable is defined and bgp.enable and
+      (bgp.state is not defined or bgp.state == 'present')
+    with_items: "{{ bgp.address_family | default([]) }}"
+
+
+
   when: bgp is defined and bgp.bgp_as is defined
 
 - block:
-  # If the bgp neighbor or network tasks resulted
+  # If the bgp neighbor, network, or eVPN tasks resulted
   # in a change, we need to update _eos_config,
   # otherwise we may get unintended results
   # on future tasks
@@ -180,43 +222,6 @@
     notify: save running config
     when: bgp.enable is defined and bgp.enable and eos_purge_bgp_neighbors and
       (bgp.state is not defined or bgp.state == 'present')
-
-  - name: Arista EOS BGP purge networks
-    eos_template:
-      src: bgp_purge_networks.j2
-      include_defaults: true
-      config: "{{ _eos_config | default(omit) }}"
-      auth_pass: "{{ auth_pass | default(omit) }}"
-      authorize: "{{ authorize | default(omit) }}"
-      host: "{{ host | default(omit) }}"
-      password: "{{ password | default(omit) }}"
-      port: "{{ port | default(omit) }}"
-      provider: "{{ provider | default(omit) }}"
-      transport: 'cli'
-      use_ssl: "{{ use_ssl | default(omit) }}"
-      username: "{{ username | default(omit) }}"
-    notify: save running config
-    when: bgp.enable is defined and bgp.enable and eos_purge_bgp_networks and
-      (bgp.state is not defined or bgp.state == 'present')
-
-  - name: Arista EOS BGP evpn setting
-    eos_template:
-      src: bgp_evpn.j2
-      include_defaults: true
-      config: "{{ _eos_config | default(omit) }}"
-      auth_pass: "{{ auth_pass | default(omit) }}"
-      authorize: "{{ authorize | default(omit) }}"
-      host: "{{ host | default(omit) }}"
-      password: "{{ password | default(omit) }}"
-      port: "{{ port | default(omit) }}"
-      provider: "{{ provider | default(omit) }}"
-      transport: 'cli'
-      use_ssl: "{{ use_ssl | default(omit) }}"
-      username: "{{ username | default(omit) }}"
-    notify: save running config
-    when: bgp.enable is defined and bgp.enable and
-      (bgp.state is not defined or bgp.state == 'present')
-    with_items: "{{ bgp.vlans | default([]) }}"
 
   when: bgp is defined and bgp.bgp_as is defined
 
