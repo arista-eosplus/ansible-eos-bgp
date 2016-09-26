@@ -4,58 +4,145 @@ defaults:
 
 testcases:
   - name: Create all address families with 1 neighbor 
-    changed: 3 
+    changed: 2 
     arguments:
       bgp:
          enable: true
          bgp_as: 18
-         vlans:
-           - id: 40
-             state: present
-             rd: "40:40"
-             route_target:
-               import: 
-                 - "1:1"
-                 - "100:100"
-               export: 
-                 - "2:2"
-               both: 
-                 - "3:3" 
-             redistribute: learned
-           - id: 50
-             rd: "50:50"
-             redistribute: learned
          address_family:
            - family: ipv4
              state: present
              neighbors:
-               state: activate
-               name: 10.10.10.10
+               - state: activate
+                 name: 10.10.10.10
            - family: ipv6
              state: present
              neighbors:
-               state: activate
-               name:  2666::01
+               - state: activate
+                 name:  2666::01
            - family: evpn
              state: present
              neighbors:
-               state: activate
-               name: 1.1.1.1
+               - state: activate
+                 name: 1.1.1.1
     setup: |
       no router bgp
       ip routing
     present: |
       router bgp 18
-         vlan 40
-            rd 40:40
-            route-target import 1:1
-            route-target both 3:3
-            route-target import 100:100
-            route-target export 2:2
-            redistribute learned
+         neighbor 10.10.10.10 maximum-routes 12000
+         neighbor 2666::1 maximum-routes 12000
+         neighbor 1.1.1.1 maximum-routes 12000
+         
+         address-family evpn
+            neighbor 1.1.1.1 activate
          !
-         vlan 50
-            rd 50:50
-            redistribute learned
+         address-family ipv4
+            neighbor 10.10.10.10 activate
+         !
+         address-family ipv6
+            neighbor 2666::1 activate
 
+  - name: Create all address families with multiple neighbors 
+    changed: 2 
+    arguments:
+      bgp:
+         enable: true
+         bgp_as: 18
+         address_family:
+           - family: ipv4
+             state: present
+             neighbors:
+               - state: activate
+                 name: 10.10.10.10
+               - state: activate
+                 name: 20.20.20.20
+           - family: ipv6
+             state: present
+             neighbors:
+               - state: activate
+                 name:  2666::01
+               - state: activate
+                 name:  26AA::01
+           - family: evpn
+             state: present
+             neighbors:
+               - state: activate
+                 name: 1.1.1.1
+               - state: activate
+                 name: 2.2.2.2
+               
+    setup: |
+      no router bgp
+      ip routing
+    present: |
+      router bgp 18
+         address-family evpn
+            neighbor 1.1.1.1 activate
+            neighbor 2.2.2.2 activate
+         !
+         address-family ipv4
+            neighbor 10.10.10.10 activate
+            neighbor 20.20.20.20 activate
+         !
+         address-family ipv6
+            neighbor 2666::1 activate
+            neighbor 26AA::1 activate
 
+  - name: Deactivate neighbors in address families 
+    changed: 2 
+    arguments:
+      bgp:
+         enable: true
+         bgp_as: 18
+         address_family:
+           - family: ipv4
+             state: present
+             neighbors:
+               - state: deactivate
+                 name: 10.10.10.10
+               - state: deactivate
+                 name: 20.20.20.20
+           - family: ipv6
+             state: present
+             neighbors:
+               - state: deactivate
+                 name:  2666::01
+               - state: deactivate
+                 name:  26AA::01
+           - family: evpn
+             state: present
+             neighbors:
+               - state: deactivate
+                 name: 1.1.1.1
+               - state: deactivate
+                 name: 2.2.2.2
+               
+    setup: |
+      no router bgp
+      ip routing
+      router bgp 18
+      address-family evpn
+      neighbor 1.1.1.1 activate
+      neighbor 2.2.2.2 activate
+      address-family ipv4
+      neighbor 10.10.10.10 activate
+      neighbor 20.20.20.20 activate
+      address-family ipv6
+      neighbor 2666::1 activate
+      neighbor 26AA::1 activate
+      
+    present: |
+      router bgp 18
+         address-family evpn
+            neighbor 1.1.1.1 activate
+            neighbor 2.2.2.2 activate
+         !
+         address-family ipv4
+            neighbor 10.10.10.10 activate
+            neighbor 20.20.20.20 activate
+         !
+         address-family ipv6
+            neighbor 2666::1 activate
+            neighbor 26AA::1 activate
+         

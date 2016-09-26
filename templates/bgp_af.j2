@@ -17,16 +17,16 @@
 router bgp {{ bgp_as }}
 
 {# if state is absent remove the full address family #}
-{% if (state == "absent") %}
+{% if (af.state == "absent") %}
 
-   no address-family {{ af }}
+   no address-family {{ family }}
 
-{% elif (state == "present") %}
+{% elif (af.state == "present") %}
   
    {# enter address-family config mode #}
    {% if af is defined %}
 
-   address-family {{ af }}
+   address-family {{ family }}
 
    {% endif %}
    
