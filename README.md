@@ -63,6 +63,7 @@ and ``eos_purge_bgp_neighbors`` objects described below:
 |   neighbors.route_map_in | string                    | Configures the BGP neigbhors route-map in value. The value specifies the name of the route-map. |
 |  neighbors.route_map_out | string                    | Configures the BGP neighbors route-map out value. The value specifies the name of the route-map. |
 | neighbors.send_community | boolean: true, false      | Configures the BGP neighbors send-community value. If enabled then the BGP send-community value is enable. If disabled, then the BGP send-community value is disabled. |
+| neighbors.next_hop_self  | boolean: true, false      | configures the switch to list its address as the next hop in routes that it advertises to the specified BGP-speaking neighbor or neighbors in the specified peer group. This is used in networks where BGP neighbors do not directly access all other neighbors on the same subnet. |
 |     neighbors.peer_group | string                    | The name of the peer-group value to associate with the neighbor. This argument is only valid if the neighbor is an IPv4 address |
 |         neighbors.enable | boolean: true*, false     | Configures the administrative state for the BGP neighbor process. If enable is True then the BGP neighbor process is administartively enabled and if enable is False then the BGP neighbor process is administratively disabled. |
 |                listeners | list                      | See the following listeners.* keys for each list item |
