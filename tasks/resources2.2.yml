@@ -1,0 +1,182 @@
+# Perform the EOS BGP tasks under Ansible 2.2 or later
+# using the Ansible eos_config module
+
+- name: Arista EOS BGP resources (Ansible >= 2.2)
+  eos_config:
+    src: bgp.j2
+    defaults: true
+    config: "{{ _eos_config | default(omit) }}"
+    auth_pass: "{{ auth_pass | default(omit) }}"
+    authorize: "{{ authorize | default(omit) }}"
+    host: "{{ host | default(omit) }}"
+    password: "{{ password | default(omit) }}"
+    port: "{{ port | default(omit) }}"
+    provider: "{{ provider | default(omit) }}"
+    transport: 'cli'
+    use_ssl: "{{ use_ssl | default(omit) }}"
+    username: "{{ username | default(omit) }}"
+  notify: save running config
+  register: bgp_result
+  when: bgp is defined and bgp.bgp_as is defined
+
+- block:
+  # If the bgp task resulted in a change, we need to update
+  # _eos_config, otherwise we may get unintended results
+  # on future tasks
+
+  - name: Gather EOS configuration (Ansible >= 2.2)
+    eos_command:
+      commands: 'show running-config all | exclude \.\*'
+      provider: "{{ provider | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    register: output
+    no_log: "{{ no_log | default(true) }}"
+
+  - name: Save EOS configuration
+    set_fact:
+      _eos_config: "{{ output.stdout[0] }}"
+    no_log: "{{ no_log | default(true) }}"
+
+  when: bgp_result | changed
+
+- block:
+  # only configure neighbors and networks if bgp was
+  # defined and present, otherwise the configuration is pointless
+
+  - name: Arista EOS BGP configure neighbors (Ansible >= 2.2)
+    eos_config:
+      src: bgp_neighbors.j2
+      defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    notify: save running config
+    register: bgp_neighbors_result
+    when: bgp.enable is defined and bgp.enable and item.name is defined and
+      (bgp.state is not defined or bgp.state == 'present')
+    with_items: "{{ bgp.neighbors | default([]) }}"
+
+  - name: Arista EOS BGP configure networks (Ansible >= 2.2)
+    eos_config:
+      src: bgp_networks.j2
+      defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    notify: save running config
+    register: bgp_networks_result
+    when: bgp.enable is defined and bgp.enable and
+      (bgp.state is not defined or bgp.state == 'present')
+    with_items: "{{ bgp.networks | default([]) }}"
+
+  when: bgp is defined and bgp.bgp_as is defined
+
+- block:
+  # If the bgp neighbor or network tasks resulted
+  # in a change, we need to update _eos_config,
+  # otherwise we may get unintended results
+  # on future tasks
+
+  - name: Gather EOS configuration (Ansible >= 2.2)
+    eos_command:
+      commands: 'show running-config all | exclude \.\*'
+      provider: "{{ provider | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    register: output
+    no_log: "{{ no_log | default(true) }}"
+
+  - name: Save EOS configuration
+    set_fact:
+      _eos_config: "{{ output.stdout[0] }}"
+    no_log: "{{ no_log | default(true) }}"
+
+  when: (bgp_neighbors_result is defined and bgp_neighbors_result | changed) or
+    (bgp_networks_result is defined and bgp_networks_result | changed)
+
+- block:
+  # only do the remaining tasks if bgp was defined and present,
+  # otherwise the configuration is pointless
+
+  - name: Arista EOS BGP redistribute setting (Ansible >= 2.2)
+    eos_config:
+      src: bgp_redistribute.j2
+      defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    notify: save running config
+    when: bgp.enable is defined and bgp.enable and
+      (bgp.state is not defined or bgp.state == 'present')
+
+  - name: Arista EOS BGP purge neighbors (Ansible >= 2.2)
+    eos_config:
+      src: bgp_purge_neighbors.j2
+      defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    notify: save running config
+    when: bgp.enable is defined and bgp.enable and eos_purge_bgp_neighbors and
+      (bgp.state is not defined or bgp.state == 'present')
+
+  - name: Arista EOS BGP purge networks (Ansible >= 2.2)
+    eos_config:
+      src: bgp_purge_networks.j2
+      defaults: true
+      config: "{{ _eos_config | default(omit) }}"
+      auth_pass: "{{ auth_pass | default(omit) }}"
+      authorize: "{{ authorize | default(omit) }}"
+      host: "{{ host | default(omit) }}"
+      password: "{{ password | default(omit) }}"
+      port: "{{ port | default(omit) }}"
+      provider: "{{ provider | default(omit) }}"
+      transport: 'cli'
+      use_ssl: "{{ use_ssl | default(omit) }}"
+      username: "{{ username | default(omit) }}"
+    notify: save running config
+    when: bgp.enable is defined and bgp.enable and eos_purge_bgp_networks and
+      (bgp.state is not defined or bgp.state == 'present')
+
+  when: bgp is defined and bgp.bgp_as is defined

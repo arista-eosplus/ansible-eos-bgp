@@ -101,9 +101,6 @@ testcases:
          timers bgp 10 60
          bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 65003
          bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
-    absent: |
-      router bgp 114
-         bgp listen range 10.1.0.0/16 peer-group notdemoleaf remote-as 64003
 
   - name: Modify basic bgp (change AS number)
     arguments:
@@ -139,8 +136,6 @@ testcases:
          timers bgp 10 60
          bgp listen range 10.1.0.0/16 peer-group demoleaf remote-as 65003
          bgp listen range 10.2.0.0/16 peer-group demoleaf2 remote-as 65004
-    absent: |
-      router bgp 114
 
   - name: Remove bgp by same AS number
     arguments:
