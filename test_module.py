@@ -166,48 +166,44 @@ class TestModule(object):
                     )
                     assert device[hostname]['changed'] == True, msg
 
-                    # In-between versions strip whitespace from around
-                    # the updates list. Set the initial value of the
-                    # stripped absent string here.
-                    absent_stripped = 'X.X.X should never match'
+                    # Join the list of updates and remove trailing newline
+                    updates = '\n'.join(device[hostname]['updates'])
+                    updates = updates.rstrip('\n')
+                    # The output from the playbook is sanitized - the phrase
+                    # network-admin in username entries is changed to
+                    # network-********. Replace the asterisks with admin again
+                    # for matching the results.
+                    updates = re.sub("username ([^\n]*) role network-\*{8}",
+                                    r'username \1 role network-admin',
+                                    updates)
 
-                    # Ansible 2.2 and later returns updates list without
-                    # indentation or sorting. For these versions, just join
-                    # the updates list, and remove indentation from absent
-                    # configuration before joining.
+                    # Format the absent list for comparison to the updates
+                    # list. Make two lists: a list with the standard config
+                    # indentation, and a second list with the indentation
+                    # stripped. Later versions of Ansible began stripping
+                    # the indentation from the updates list, so we need to
+                    # compare the updates to both a standard format config
+                    # and an indent-stripped format of the config.
+
                     if ANSIBLE_NEW:
-                        updates = '\n'.join(device[hostname]['updates'])
-                        updates = updates.rstrip('\n')
-                        # Join the 'parents' key with the 'lines' key to
-                        # create the expected absent string
+                        # Ansible 2.2 uses parents and lines to construct
+                        # the configuration. We need to join those back
+                        # together to create a standard format config block.
                         absent = list(value.get('parents', []))
                         absent.extend(value['lines'])
                         absent = '\n'.join(absent)
-                        # Since Ansible 2.2 and later remove indentation,
-                        # we have already stripped the indentation from
-                        # the absent list. Set absent_stripped to the
-                        # absent string, just to be safe.
-                        absent_stripped = absent
+                        # # Since Ansible 2.2 and later remove indentation,
+                        # # we have already stripped the indentation from
+                        # # the absent list. Set absent_stripped to the
+                        # # absent string, just to be safe.
+                        # absent_stripped = absent
                     else:
-                        # Compare changes with expected values, unsorted
-                        # Updates should be in same order as they were sent
-                        updates = '\n'.join(device[hostname]['updates'])
-                        updates = updates.rstrip('\n')
-                        # The output from the playbook is sanitized - the phrase
-                        # network-admin in username entries is changed to
-                        # network-********. Replace the asterisks with admin again
-                        # for matching the results.
-                        updates = re.sub("username ([^\n]*) role network-\*{8}",
-                                        r'username \1 role network-admin',
-                                        updates)
-
                         # Strip any trailing whitespace from the absent string
+                        # This will be the standard format configuration
+                        # of what should be absent on the switch
                         absent = value.rstrip()
 
-                        # Later versions of Ansible 2.1 strip the indentation
-                        # from update lines. Set absent_stripped to the
-                        # absent string with the indentation removed
-                        absent_stripped = '\n'.join(map(str.lstrip, absent.split('\n'))).rstrip('\n')
+                    absent_stripped = '\n'.join(map(str.lstrip, absent.split('\n'))).rstrip('\n')
 
                     msg = ("{} - Some part of absent configuration found "
                            "on device '{}'".format(desc, hostname))
