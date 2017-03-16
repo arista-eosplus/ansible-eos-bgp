@@ -24,7 +24,7 @@
   # _eos_config, otherwise we may get unintended results
   # on future tasks
 
-  - name: Gather EOS configuration
+  - name: Gather EOS configuration (Ansible <= 2.1)
     eos_command:
       commands: 'show running-config all | exclude \.\*'
       provider: "{{ provider | default(omit) }}"
@@ -50,7 +50,7 @@
   # only configure neighbors and networks if bgp was
   # defined and present, otherwise the configuration is pointless
 
-  - name: Arista EOS BGP configure neighbors
+  - name: Arista EOS BGP configure neighbors (Ansible <= 2.1)
     eos_template:
       src: bgp_neighbors.j2
       include_defaults: true
@@ -70,7 +70,7 @@
       (bgp.state is not defined or bgp.state == 'present')
     with_items: "{{ bgp.neighbors | default([]) }}"
 
-  - name: Arista EOS BGP configure networks
+  - name: Arista EOS BGP configure networks (Ansible <= 2.1)
     eos_template:
       src: bgp_networks.j2
       include_defaults: true
@@ -98,7 +98,7 @@
   # otherwise we may get unintended results
   # on future tasks
 
-  - name: Gather EOS configuration
+  - name: Gather EOS configuration (Ansible <= 2.1)
     eos_command:
       commands: 'show running-config all | exclude \.\*'
       provider: "{{ provider | default(omit) }}"
@@ -125,7 +125,7 @@
   # only do the remaining tasks if bgp was defined and present,
   # otherwise the configuration is pointless
 
-  - name: Arista EOS BGP redistribute setting
+  - name: Arista EOS BGP redistribute setting (Ansible <= 2.1)
     eos_template:
       src: bgp_redistribute.j2
       include_defaults: true
@@ -143,7 +143,7 @@
     when: bgp.enable is defined and bgp.enable and
       (bgp.state is not defined or bgp.state == 'present')
 
-  - name: Arista EOS BGP purge neighbors
+  - name: Arista EOS BGP purge neighbors (Ansible <= 2.1)
     eos_template:
       src: bgp_purge_neighbors.j2
       include_defaults: true
@@ -161,7 +161,7 @@
     when: bgp.enable is defined and bgp.enable and eos_purge_bgp_neighbors and
       (bgp.state is not defined or bgp.state == 'present')
 
-  - name: Arista EOS BGP purge networks
+  - name: Arista EOS BGP purge networks (Ansible <= 2.1)
     eos_template:
       src: bgp_purge_networks.j2
       include_defaults: true
