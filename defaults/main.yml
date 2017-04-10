@@ -20,3 +20,5 @@ network_defaults:
 
 eos_purge_bgp_networks: no
 eos_purge_bgp_neighbors: no
+
+resource_version: '2.2'
