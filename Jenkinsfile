@@ -7,6 +7,7 @@
  * pull request in the ansible-eos-bgp repo
  */
 
+/* Only run against the master branch on the roles */
 if (env.BRANCH_NAME == 'master') {
 
     node('master') {
