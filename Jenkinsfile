@@ -7,52 +7,56 @@
  * pull request in the ansible-eos-bgp repo
  */
 
-node('master') {
+if (env.BRANCH_NAME == 'master') {
 
-    /*
-     * Lock the Ansible-Role-Test 'resource' to prevent multiple
-     * instances of the role test build from attempting to
-     * run simultaneously. Forces a sequential queue for all roles.
-     */
+    node('master') {
 
-    lock('Ansible-Role-Test') {
+        /*
+        * Lock the Ansible-Role-Test 'resource' to prevent multiple
+        * instances of the role test build from attempting to
+        * run simultaneously. Forces a sequential queue for all roles.
+        */
 
-        currentBuild.result = "SUCCESS"
+        lock('Ansible-Role-Test') {
 
-        try {
+            currentBuild.result = "SUCCESS"
 
-            stage ('Run tests for ansible-eos-bgp role') {
+            try {
 
-                build job: 'Ansible-Role-Test',
-                    parameters: [string(name: 'ROLE_NAME', value: 'ansible-eos-bgp')]
+                stage ('Run tests for ansible-eos-bgp role') {
+
+                    build job: 'Ansible-Role-Test',
+                        parameters: [string(name: 'ROLE_NAME', value: 'ansible-eos-bgp')]
+
+                }
+
+                stage ('Generate email report') {
+
+                mail body: "${env.BUILD_URL} build successful.\n" +
+                            "Started by ${env.BUILD_CAUSE}",
+                        from: 'grybak@arista.com',
+                        replyTo: 'grybak@arista.com',
+                        subject: "ansible role test ${env.JOB_NAME} (${env.BUILD_NUMBER}) build successful",
+                        to: 'grybak@arista.com'
+
+                }
 
             }
 
-            stage ('Generate email report') {
+            catch (err) {
 
-            mail body: "${env.BUILD_URL} build successful.\n" +
-                        "Started by ${env.BUILD_CAUSE}",
-                    from: 'grybak@arista.com',
-                    replyTo: 'grybak@arista.com',
-                    subject: "ansible role test ${env.JOB_NAME} (${env.BUILD_NUMBER}) build successful",
-                    to: 'grybak@arista.com'
+                currentBuild.result = "FAILURE"
 
+                    mail body: "${env.JOB_NAME} (${env.BUILD_NUMBER}) cookbook build error " +
+                            "is here: ${env.BUILD_URL}\nStarted by ${env.BUILD_CAUSE}" ,
+                        from: 'grybak@arista.com',
+                        replyTo: 'grybak@arista.com',
+                        subject: "ansible role test ${env.JOB_NAME} (${env.BUILD_NUMBER}) build failed",
+                        to: 'grybak@arista.com'
+
+                    throw err
             }
 
-        }
-
-        catch (err) {
-
-            currentBuild.result = "FAILURE"
-
-                mail body: "${env.JOB_NAME} (${env.BUILD_NUMBER}) cookbook build error " +
-                        "is here: ${env.BUILD_URL}\nStarted by ${env.BUILD_CAUSE}" ,
-                    from: 'grybak@arista.com',
-                    replyTo: 'grybak@arista.com',
-                    subject: "ansible role test ${env.JOB_NAME} (${env.BUILD_NUMBER}) build failed",
-                    to: 'grybak@arista.com'
-
-                throw err
         }
 
     }
