@@ -7,59 +7,51 @@
  * pull request in the ansible-eos-bgp repo
  */
 
-/* Only run against the master branch on the roles */
-if (env.BRANCH_NAME == 'master') {
+// Change this comment to force a run of the pipeline  02
 
-    node('master') {
-
-        /*
-        * Lock the Ansible-Role-Test 'resource' to prevent multiple
-        * instances of the role test build from attempting to
-        * run simultaneously. Forces a sequential queue for all roles.
-        */
-
-        lock('Ansible-Role-Test') {
-
-            currentBuild.result = "SUCCESS"
-
-            try {
-
-                stage ('Run tests for ansible-eos-bgp role') {
-
-                    build job: 'Ansible-Role-Test',
-                        parameters: [string(name: 'ROLE_NAME', value: 'ansible-eos-bgp')]
-
-                }
-
-                stage ('Generate email report') {
-
-                mail body: "${env.BUILD_URL} build successful.\n" +
-                            "Started by ${env.BUILD_CAUSE}",
-                        from: 'grybak@arista.com',
-                        replyTo: 'grybak@arista.com',
-                        subject: "ansible role test ${env.JOB_NAME} (${env.BUILD_NUMBER}) build successful",
-                        to: 'grybak@arista.com'
-
-                }
-
-            }
-
-            catch (err) {
-
-                currentBuild.result = "FAILURE"
-
-                    mail body: "${env.JOB_NAME} (${env.BUILD_NUMBER}) cookbook build error " +
-                            "is here: ${env.BUILD_URL}\nStarted by ${env.BUILD_CAUSE}" ,
-                        from: 'grybak@arista.com',
-                        replyTo: 'grybak@arista.com',
-                        subject: "ansible role test ${env.JOB_NAME} (${env.BUILD_NUMBER}) build failed",
-                        to: 'grybak@arista.com'
-
-                    throw err
-            }
-
-        }
-
+pipeline {
+    agent{ label 'jenkins-exec-02'}
+    options {
+        buildDiscarder(
+            // Only keep the 10 most recent builds
+            logRotator(numToKeepStr:'10'))
+    }
+    environment {
+        projectName = 'ansible-eos-bgp'
+        emailTo = 'grybak@arista.com'
+        emailFrom = 'grybak+jenkins@arista.com'
     }
 
+    stages {
+        stage ('Run tests for ansible-eos-bgp role') {
+            steps {
+                    build job: 'gar-test-starter',
+                          parameters: [string(name: 'ROLE_NAME', value: 'ansible-eos-bgp')]
+            }
+            when {
+                // Only run against 'master' branch
+                branch 'master'
+            }
+        }
+    }
+
+    post {
+        failure {
+            // Send an email with a link to logs on failure
+            mail to: env.emailTo,
+                 from: env.emailFrom,
+                 subject: "${env.projectName} ${env.JOB_NAME} (${env.BUILD_NUMBER}) build failed",
+                 body: "${env.JOB_NAME} (${env.BUILD_NUMBER}) ${env.projectName} build error " +
+                       "is here: ${env.BUILD_URL}\nStarted by ${env.BUILD_CAUSE}"
+        }
+        success {
+            // Send an email notification on success
+            mail to: env.emailTo,
+                 from: env.emailFrom,
+                 subject: "${env.projectName} ${env.JOB_NAME} (${env.BUILD_NUMBER}) build successful",
+                 body: "${env.JOB_NAME} (${env.BUILD_NUMBER}) ${env.projectName} build successful\n" +
+                       "Started by ${env.BUILD_CAUSE}\n" +
+                       "${env.BUILD_URL}"
+        }
+    }
 }
