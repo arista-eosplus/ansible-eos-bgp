@@ -10,7 +10,7 @@
 // Change this comment to force a run of the pipeline  02
 
 pipeline {
-    agent any
+    agent { label 'master' }
     options {
         buildDiscarder(
             // Only keep the 10 most recent builds
