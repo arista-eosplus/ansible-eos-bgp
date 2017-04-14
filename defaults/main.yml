@@ -22,3 +22,6 @@ eos_purge_bgp_networks: no
 eos_purge_bgp_neighbors: no
 
 resource_version: '2.2'
+gather_config_commands:
+  - command: 'show running-config all | exclude \.\*'
+    output: 'text'
