@@ -26,7 +26,7 @@
 
   - name: Gather EOS configuration (Ansible >= 2.2)
     eos_command:
-      commands: 'show running-config all | exclude \.\*'
+      commands: "{{ gather_config_commands }}"
       provider: "{{ provider | default(omit) }}"
       auth_pass: "{{ auth_pass | default(omit) }}"
       authorize: "{{ authorize | default(omit) }}"
@@ -37,7 +37,7 @@
       use_ssl: "{{ use_ssl | default(omit) }}"
       username: "{{ username | default(omit) }}"
     register: output
-    no_log: "{{ no_log | default(true) }}"
+    # no_log: "{{ no_log | default(true) }}"
 
   - name: Save EOS configuration
     set_fact:
@@ -100,7 +100,7 @@
 
   - name: Gather EOS configuration (Ansible >= 2.2)
     eos_command:
-      commands: 'show running-config all | exclude \.\*'
+      commands: "{{ gather_config_commands }}"
       provider: "{{ provider | default(omit) }}"
       auth_pass: "{{ auth_pass | default(omit) }}"
       authorize: "{{ authorize | default(omit) }}"

@@ -26,7 +26,7 @@
 
   - name: Gather EOS configuration (Ansible <= 2.1)
     eos_command:
-      commands: 'show running-config all | exclude \.\*'
+      commands: "{{ gather_config_commands }}"
       provider: "{{ provider | default(omit) }}"
       auth_pass: "{{ auth_pass | default(omit) }}"
       authorize: "{{ authorize | default(omit) }}"
@@ -100,7 +100,7 @@
 
   - name: Gather EOS configuration (Ansible <= 2.1)
     eos_command:
-      commands: 'show running-config all | exclude \.\*'
+      commands: "{{ gather_config_commands }}"
       provider: "{{ provider | default(omit) }}"
       auth_pass: "{{ auth_pass | default(omit) }}"
       authorize: "{{ authorize | default(omit) }}"
