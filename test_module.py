@@ -37,8 +37,11 @@ SEPARATOR = '    ' + '*' * 50
 
 # Because of changes between Ansible 2.1 and 2.2, let's
 # keep track of what version we are working with.
-# Assume Ansible 2.1 - we'll update this variable during execution.
+# ANSIBLE_NEW is True if the version is 2.2 or later (assume true,
+# will update during test setup)
+# ANSIBLE_VERSION is the exact version string
 ANSIBLE_NEW = False
+ANSIBLE_VERSION = None
 
 
 class TestCase(object):
@@ -137,18 +140,23 @@ class TestModule(object):
                     # -- the task output returns some items in the
                     # -- updates dictionary, but the play recap
                     # -- indicates no changes. Skip updates check for 2.2
-                    if not ANSIBLE_NEW:
+                    ansible_2_2 = (
+                        parse_version(ANSIBLE_VERSION) >= parse_version('2.2') and
+                        parse_version(ANSIBLE_VERSION) < parse_version('2.3')
+                    )
+                    # if not ANSIBLE_NEW:
+                    if not ansible_2_2:
                         delim = " ---\n"
                         updates = device[hostname].get('updates', [])
-                        msg = ("{} - Expected configuration\n{}{}\n{}not found "
-                            "on device '{}'".format(desc, delim,
-                                                    '\n'.join(updates), delim,
-                                                    hostname))
+                        msg = ("{} - Expected configuration\n{}{}\n{}"
+                               "not found on device '{}'".
+                               format(desc, delim, '\n'.join(updates),
+                                      delim, hostname))
                         assert updates == [], msg
                     # Result should show no changes
                     msg = ("{} - Device '{}' reported no updates, but "
-                        "returned 'changed'".format(desc, hostname))
-                    assert device[hostname]['changed'] == False, msg
+                           "returned 'changed'".format(desc, hostname))
+                    assert not int(device[hostname]['changed']), msg
 
         if self.testcase.absent:
             desc = 'Validate absent configuration'
@@ -161,10 +169,11 @@ class TestModule(object):
                     hostname = device.keys()[0]
                     # Result should show change has taken place
                     msg = (
-                        "{} - Entire absent configuration found on device '{}'".
+                        "{} - Entire absent configuration found "
+                        "on device '{}'".
                         format(desc, hostname)
                     )
-                    assert device[hostname]['changed'] == True, msg
+                    assert int(device[hostname]['changed']), msg
 
                     # Join the list of updates and remove trailing newline
                     updates = '\n'.join(device[hostname]['updates'])
@@ -174,8 +183,8 @@ class TestModule(object):
                     # network-********. Replace the asterisks with admin again
                     # for matching the results.
                     updates = re.sub("username ([^\n]*) role network-\*{8}",
-                                    r'username \1 role network-admin',
-                                    updates)
+                                     r'username \1 role network-admin',
+                                     updates)
 
                     # Format the absent list for comparison to the updates
                     # list. Make two lists: a list with the standard config
@@ -229,7 +238,7 @@ class TestModule(object):
                 # Ansible 2.2 and later:
                 # Run setup_cmds regardless of current state.
                 # In order to send a fixed list of commands as setup, we
-                # must force the commands into the 'before' block, otherwise
+                # must force the commands into the 'after' block, otherwise
                 # the module removes duplicate lines, which may be needed
                 # for the setup, e.g. setting shutdown on multiple interfaces:
                 #       interface Loopback 1
@@ -244,15 +253,23 @@ class TestModule(object):
                 #       shutdown
                 #       interface Loopback 2
                 #       interface Loopback 3
-                # We also need to have a valid command in the 'lines'
-                # parameter that is not in the running-config to ensure
-                # the commands are run - use 'configure terminal', which
-                # is an effective no-op
+                #
+                # Another issue is that sometime an EOS configuration
+                # session (result of command `configure session <id>`)
+                # may get left behind by Ansible. If these accumulate,
+                # we could end up maxing out our pending sessions. Setting
+                # max pending to 1 and then to 10 accomplishes two things:
+                # it clears all but 1 pending session, opening up 9 more
+                # for use; it provides the required 'lines' values needed
+                # to be able to send the 'after' commands.
                 args = {
                     'module': 'eos_config',
                     'description': 'Run test case setup commands',
-                    'lines': ['configure terminal'],
-                    'before': ['configure terminal'] + setup_cmds,
+                    'lines': [
+                        'service configuration session max pending 1',
+                        'service configuration session max pending 10'
+                    ],
+                    'after': setup_cmds,
                     'match': 'none',
                 }
             else:
@@ -352,7 +369,6 @@ class TestModule(object):
             # not need to reformat the string. Just return it in a list.
             return [config]
 
-
     def run_module(self):
         (retcode, out, _) = self.execute_module()
         out_stripped = re.sub(r'\"config\": \"! Command:.*\\nend\"',
@@ -378,10 +394,10 @@ class TestModule(object):
 
         recap = []
         for line in lines:
-            match = re.search(r'^(\S+)\s+\:\s+' \
-                              r'ok=(\d+)\s+' \
-                              r'changed=(\d+)\s+' \
-                              r'unreachable=(\d+)\s+' \
+            match = re.search(r'^(\S+)\s+\:\s+'
+                              r'ok=(\d+)\s+'
+                              r'changed=(\d+)\s+'
+                              r'unreachable=(\d+)\s+'
                               r'failed=(\d+)', line)
             if not match:
                 self.output("Playbook stdout:\n\n{}".format(output))
@@ -399,8 +415,10 @@ class TestModule(object):
         updates = []
         for device in recap:
             hostname = device.keys()[0]
-            match = re.search(r'(?<!skipping: )\[%s\] => ((?:\{(?:(?!TASK \[).*\n)*\})|(?:\{(?:(?!TASK \[).*)\}))' % hostname,
-                            output, re.M)
+            match = re.search(
+                r'(?<!skipping: )\[%s\] => '
+                r'((?:\{(?:(?!TASK \[).*\n)*\})|'
+                r'(?:\{(?:(?!TASK \[).*)\}))' % hostname, output, re.M)
             if not match:
                 self.output("Playbook stdout:\n\n{}".format(output))
                 raise ValueError("Unable to parse Ansible output for "
@@ -414,11 +432,15 @@ class TestModule(object):
         if ANSIBLE_NEW:
             # Use eos_config when running Ansible 2.2 or later
             # src is a dictionary with keys 'lines' and (optionally) 'parents'
-            args = {'module': 'eos_config', 'description': desc, 'match': 'line'}
+            args = {
+                'module': 'eos_config',
+                'description': desc,
+                'match': 'line'
+            }
             args.update(src)
         else:
             # Use eos_template when running Ansible 2.1 or earlier
-            args = {'module': 'eos_template', 'description': desc, 'src': src, }
+            args = {'module': 'eos_template', 'description': desc, 'src': src}
 
         arguments = [json.dumps(args)]
         (ret_code, out, _) = ansible_playbook(EOS_MODULE_PLAYBOOK,
@@ -459,6 +481,9 @@ def setup():
     # version string is 2.2.0.0 or greater
     global ANSIBLE_NEW
     ANSIBLE_NEW = parse_version(version) >= parse_version('2.2.0.0')
+    # Save the Ansible version to be used globally
+    global ANSIBLE_VERSION
+    ANSIBLE_VERSION = version
 
     run_backup = "  Backing up running-config on nodes ..."
     print >> sys.stderr, run_backup
@@ -491,8 +516,10 @@ def setup():
                                           arguments=arguments)
 
     if ret_code != 0:
-        LOG.write(">> ansible-playbook {} stdout:\n{}".format(EOS_MODULE_PLAYBOOK, out))
-        LOG.write(">> ansible-playbook {} stddrr:\n{}".format(EOS_MODULE_PLAYBOOK, err))
+        LOG.write(">> ansible-playbook "
+                  "{} stdout:\n{}".format(EOS_MODULE_PLAYBOOK, out))
+        LOG.write(">> ansible-playbook "
+                  "{} stddrr:\n{}".format(EOS_MODULE_PLAYBOOK, err))
         teardown()
         raise RuntimeError("Error in Test Suite Setup")
 
@@ -527,8 +554,10 @@ def setup():
                                           arguments=arguments)
 
     if ret_code != 0:
-        LOG.write(">> ansible-playbook {} stdout:\n{}".format(EOS_MODULE_PLAYBOOK, out))
-        LOG.write(">> ansible-playbook {} stddrr:\n{}".format(EOS_MODULE_PLAYBOOK, err))
+        LOG.write(">> ansible-playbook "
+                  "{} stdout:\n{}".format(EOS_MODULE_PLAYBOOK, out))
+        LOG.write(">> ansible-playbook "
+                  "{} stddrr:\n{}".format(EOS_MODULE_PLAYBOOK, err))
         teardown()
         raise RuntimeError("Error in Test Suite Setup")
 
@@ -540,7 +569,9 @@ def setup():
     if not os.path.exists(testcases_home):
         print >> sys.stderr, "\n  ***** Testcase directory not found!! *****"
         teardown()
-        raise RuntimeError("Testcase path '{}' does not exist".format(testcases_home))
+        raise RuntimeError(
+            "Testcase path '{}' does not exist".format(testcases_home)
+        )
 
     filenames = os.listdir(testcases_home)
 
@@ -622,7 +653,8 @@ def teardown():
             msg = "Error restoring running-config on nodes\n" \
                   "Running ansible-playbook {} -e {}\n" \
                   ">> stdout: {}\n" \
-                  ">> stderr: {}\n".format(EOS_MODULE_PLAYBOOK, arguments, out, err)
+                  ">> stderr: {}\n".format(EOS_MODULE_PLAYBOOK,
+                                           arguments, out, err)
             warnings.warn(msg)
 
         # Restore the startup-config on the nodes
@@ -664,7 +696,8 @@ def teardown():
             msg = "Error restoring startup-config on nodes\n" \
                   "Running ansible-playbook {} -e {}\n" \
                   ">> stdout: {}\n" \
-                  ">> stderr: {}\n".format(EOS_MODULE_PLAYBOOK, arguments, out, err)
+                  ">> stderr: {}\n".format(EOS_MODULE_PLAYBOOK,
+                                           arguments, out, err)
             warnings.warn(msg)
 
     print >> sys.stderr, "  Teardown complete"
