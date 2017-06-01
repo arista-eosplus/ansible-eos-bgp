@@ -26,6 +26,7 @@
       eos_config:
         lines: "{{ lines | default(['']) }}"
         parents: "{{ parents | default(omit) }}"
+        defaults: true
         before: "{{ before | default(omit) }}"
         after: "{{ after | default(omit) }}"
         match: "{{ match | default('none')}}"
