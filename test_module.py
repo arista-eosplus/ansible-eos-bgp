@@ -277,7 +277,7 @@ class TestModule(object):
                 args = {
                     'module': 'eos_command',
                     'description': 'Run test case setup commands',
-                    'cmds': ['configure terminal'] + setup_cmds,
+                    'cmds': ['configure terminal'] + setup_cmds + ['exit'],
                 }
 
             arguments = [json.dumps(args)]
