@@ -16,8 +16,8 @@ pipeline {
     }
     environment {
         projectName = 'ansible-eos-bgp'
-        emailTo = 'grybak@arista.com'
-        emailFrom = 'grybak+jenkins@arista.com'
+        emailTo = 'ansible-dev+jenkins@arista.com'
+        emailFrom = 'eosplus-dev@arista.com'
     }
 
     stages {
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 // Grab the revision hash and pass it to the test build
                 sh 'git rev-parse HEAD > revision'
-                build job: 'gar-test-starter',
+                build job: 'Ansible-Role-Test-Starter',
                       parameters: [
                           string(name: 'ROLE_NAME', value: 'ansible-eos-bgp'),
                           string(name: 'REVISION', value: readFile('revision'))
