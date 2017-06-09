@@ -39,7 +39,7 @@
     host: "{{ host|default(omit) }}"
     password: "{{ password|default(omit) }}"
     port: "{{ port|default(omit) }}"
-    transport: 'cli'
+    transport: "{{ transport | default(omit) }}"
     use_ssl: "{{ use_ssl|default(omit) }}"
     username: "{{ username|default(omit) }}"
   when: eos_save_running_config
