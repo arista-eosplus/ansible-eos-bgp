@@ -52,7 +52,7 @@ class TestCase(object):
         self.host = None
 
         self.inventory = kwargs.get('inventory')
-        self.exitcode = kwargs.get('exitcode', 0)
+        self.negative = kwargs.get('negative', False)
         self.idempotent = kwargs.get('idempotent', True)
         self.changed = kwargs.get('changed', True)
         self.present = kwargs.get('present')
@@ -375,9 +375,17 @@ class TestModule(object):
                               '\"config\": \"--- stripped for space ---\"',
                               out)
         LOG.write("PLaybook stdout:\n\n{}".format(out_stripped))
-        msg = "Return code: {}, Expected code: {}".format(retcode, self.testcase.exitcode)
-        self.output(msg)
-        assert retcode == self.testcase.exitcode, msg
+        if (self.testcase.negative):
+            # This is a negative testcase, look for a return code
+            # other than 0
+            msg = "Expected failure, return code: {}".format(retcode)
+            self.output(msg)
+            assert retcode != 0, msg
+        else:
+            # This is a positive testcase, expect return code 0
+            msg = "Return code: {}, Expected code: 0".format(retcode)
+            self.output(msg)
+            assert retcode == 0, msg
         return self.parse_response(out)
 
     def execute_module(self):
