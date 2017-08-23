@@ -19,12 +19,14 @@ testcases:
             route_map_in: test_route
             send_community: true
             description: first neighbor
+            fall_over_bfd: true
           - name: 10.1.1.3
             remote_as: 65002
             peer_group: demoleaf
             enable: false
             route_map_out: other_route
             next_hop_self: true
+            send_community: false
             description: second neighbor
     setup: |
       no router bgp
@@ -41,6 +43,7 @@ testcases:
          no neighbor 10.1.1.1 route-map out
          neighbor 10.1.1.1 send-community
          no neighbor 10.1.1.1 next-hop-self
+         neighbor 10.1.1.1 fall-over bfd
          neighbor 10.1.1.1 description first neighbor
          neighbor 10.1.1.3 remote-as 65002
          neighbor 10.1.1.3 peer-group demoleaf
@@ -49,6 +52,7 @@ testcases:
          neighbor 10.1.1.3 route-map other_route out
          no neighbor 10.1.1.3 send-community
          neighbor 10.1.1.3 next-hop-self
+         no neighbor 10.1.1.3 fall-over bfd
          neighbor 10.1.1.3 description second neighbor
 
   - name: Modify bgp with neighbor settings
@@ -67,6 +71,7 @@ testcases:
             route_map_in: test_route
             send_community: true
             description: first neighbor
+            fall_over_bfd: false
           - name: 10.1.1.3
             remote_as: 65002
             peer_group: demoleaf
@@ -74,11 +79,13 @@ testcases:
             route_map_out: other_route
             next_hop_self: true
             description: second neighbor
+            fall_over_bfd: true
           - name: 10.1.1.5
             remote_as: 65002
             peer_group: demoleaf
             enable: true
             description: third neighbor
+            fall_over_bfd: true
     setup: |
       no router bgp
       ip routing
@@ -122,6 +129,7 @@ testcases:
          no neighbor 10.1.1.1 route-map out
          neighbor 10.1.1.1 send-community
          no neighbor 10.1.1.1 next-hop-self
+         no neighbor 10.1.1.1 fall-over bfd
          neighbor 10.1.1.1 description first neighbor
          neighbor 10.1.1.3 remote-as 65002
          neighbor 10.1.1.3 peer-group demoleaf
@@ -130,6 +138,7 @@ testcases:
          neighbor 10.1.1.3 route-map other_route out
          no neighbor 10.1.1.3 send-community
          neighbor 10.1.1.3 next-hop-self
+         neighbor 10.1.1.3 fall-over bfd
          neighbor 10.1.1.3 description second neighbor
          neighbor 10.1.1.5 remote-as 65002
          neighbor 10.1.1.5 peer-group demoleaf
@@ -138,6 +147,7 @@ testcases:
          no neighbor 10.1.1.5 route-map out
          no neighbor 10.1.1.5 send-community
          no neighbor 10.1.1.5 next-hop-self
+         neighbor 10.1.1.5 fall-over bfd
          neighbor 10.1.1.5 description third neighbor
          neighbor 10.1.1.7 remote-as 65002
          neighbor 10.1.1.7 peer-group demoleaf
@@ -220,6 +230,7 @@ testcases:
          no neighbor 10.1.1.1 route-map out
          neighbor 10.1.1.1 send-community
          no neighbor 10.1.1.1 next-hop-self
+         no neighbor 10.1.1.1 fall-over bfd
          neighbor 10.1.1.1 description first neighbor
          neighbor 10.1.1.3 remote-as 65002
          neighbor 10.1.1.3 peer-group demoleaf
@@ -228,6 +239,7 @@ testcases:
          neighbor 10.1.1.3 route-map other_route out
          no neighbor 10.1.1.3 send-community
          neighbor 10.1.1.3 next-hop-self
+         no neighbor 10.1.1.3 fall-over bfd
          neighbor 10.1.1.3 description second neighbor
          neighbor 10.1.1.5 remote-as 65002
          neighbor 10.1.1.5 peer-group demoleaf
@@ -236,6 +248,7 @@ testcases:
          no neighbor 10.1.1.5 route-map out
          no neighbor 10.1.1.5 send-community
          no neighbor 10.1.1.5 next-hop-self
+         no neighbor 10.1.1.5 fall-over bfd
          neighbor 10.1.1.5 description third neighbor
     absent: |
       router bgp 133

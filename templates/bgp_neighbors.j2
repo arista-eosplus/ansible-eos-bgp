@@ -41,7 +41,7 @@ router bgp {{ bgp_as }}
 {% endif %}
 
 {# configure neighbor send-community #}
-{% if neighbor.send_community is defined %}
+{% if neighbor.send_community is defined and neighbor.send_community %}
 
    neighbor {{ name }} send-community
 
@@ -52,13 +52,24 @@ router bgp {{ bgp_as }}
 {% endif %}
 
 {# configure neighbor next-hop-self #}
-{% if neighbor.next_hop_self is defined %}
+{% if neighbor.next_hop_self is defined and neighbor.next_hop_self %}
 
    neighbor {{ name }} next-hop-self
 
 {% else %}
 
    no neighbor {{ name }} next-hop-self
+
+{% endif %}
+
+{# configure neighbor BFD failure detection #}
+{% if neighbor.fall_over_bfd is defined and neighbor.fall_over_bfd %}
+
+   neighbor {{ name }} fall-over bfd
+
+{% else %}
+
+   no neighbor {{ name }} fall-over bfd
 
 {% endif %}
 
