@@ -2,7 +2,7 @@ BGP Role for EOS
 ================
 
 The arista.eos-bgp role creates an abstraction for EOS BGP configuration.
-This means that you do not need to write any ansible tasks. Simply create
+This means that you do not need to write any Ansible tasks. Simply create
 an object that matches the requirements below and this role will ingest that
 object and perform the necessary configuration.
 
@@ -21,7 +21,7 @@ Requirements
 ------------
 
 Requires an SSH connection for connectivity to your Arista device. You can use
-any of the built-in eos connection variables, or the convenience ``provider``
+any of the built-in EOS connection variables, or the convenience ``provider``
 dictionary.
 
 Role Variables
@@ -47,7 +47,7 @@ and ``eos_purge_bgp_neighbors`` objects described below:
 |                      Key | Type                      | Notes                                                                                 |
 |-------------------------:|---------------------------|---------------------------------------------------------------------------------------|
 |                   bgp_as | string (required)         | The BGP autonomous system number to be configured for the local BGP routing instance. |
-|                   enable | boolean: true, false*     | Configures the administrative state for the global BGP routing process. If enable is True then the BGP routing process is administartively enabled and if enable is False then the BGP routing process is administratively disabled. |
+|                   enable | boolean: true, false*     | Configures the administrative state for the global BGP routing process. If enable is True then the BGP routing process is administratively enabled and if enable is False then the BGP routing process is administratively disabled. |
 |            maximum_paths | int                       | Configures the maximum number of parallel routes. The EOS default for this attribute is 1. This value should be less than or equal to maximum_ecmp_paths. |
 |       maximum_ecmp_paths | int                       | Configures the maximum number of ecmp paths for each route. The EOS default for this attribute is the maximum value, which varies by hardware platform. Check your Arista documentation for more information. This value should be greater than or equal to maximum_paths. |
 |     log_neighbor_changes | boolean: true*, false     | Enables or disables the logging of neighbor changes. |
@@ -60,12 +60,13 @@ and ``eos_purge_bgp_neighbors`` objects described below:
 |           neighbors.name | string (required)         | The name of the BGP neighbor to manage. This value can be either an IPv4 address or string (in the case of managing a peer group) |
 |    neighbors.description | string                    | Configures the BGP neighbors description value. The value specifies an arbitrary description to add to the neighbor statement in the nodes running-configuration. |
 |      neighbors.remote_as | int                       | Configures the BGP neighbors remote-as value. |
-|   neighbors.route_map_in | string                    | Configures the BGP neigbhors route-map in value. The value specifies the name of the route-map. |
+|   neighbors.route_map_in | string                    | Configures the BGP neighbors route-map in value. The value specifies the name of the route-map. |
 |  neighbors.route_map_out | string                    | Configures the BGP neighbors route-map out value. The value specifies the name of the route-map. |
-| neighbors.send_community | boolean: true, false      | Configures the BGP neighbors send-community value. If enabled then the BGP send-community value is enable. If disabled, then the BGP send-community value is disabled. |
-| neighbors.next_hop_self  | boolean: true, false      | Configures the switch to list its address as the next hop in routes that it advertises to the specified BGP-speaking neighbor or neighbors in the specified peer group. This is used in networks where BGP neighbors do not directly access all other neighbors on the same subnet. |
+| neighbors.send_community | boolean: true, false*     | Configures the BGP neighbors send-community value. If enabled then the BGP send-community value is enable. If disabled or false, then the BGP send-community value is disabled. |
+| neighbors.next_hop_self  | boolean: true, false*     | Configures the switch to list its address as the next hop in routes that it advertises to the specified BGP-speaking neighbor or neighbors in the specified peer group. This is used in networks where BGP neighbors do not directly access all other neighbors on the same subnet. |
+| neighbors.fall_over_bfd  | boolean: true, false*     | Configures the BGP neighbors fall-over bfd value. If enabled the BFD failure detection feature is set. If disabled or false the feature is negated. |
 |     neighbors.peer_group | string                    | The name of the peer-group value to associate with the neighbor. This argument is only valid if the neighbor is an IPv4 address |
-|         neighbors.enable | boolean: true*, false     | Configures the administrative state for the BGP neighbor process. If enable is True then the BGP neighbor process is administartively enabled and if enable is False then the BGP neighbor process is administratively disabled. |
+|         neighbors.enable | boolean: true*, false     | Configures the administrative state for the BGP neighbor process. If enable is True then the BGP neighbor process is administratively enabled and if enable is False then the BGP neighbor process is administratively disabled. |
 |                listeners | list                      | See the following listeners.* keys for each list item |
 |           listeners.name | string (required)         | The IPv4 network which describes the listen range. For example 192.168.1.0/24. |
 |     listeners.peer_group | string (required)         | The name of the peer-group value to associate with the neighbor. |
@@ -102,14 +103,14 @@ the Ansible group_vars or host_vars directories, or in the playbook itself.
 | ----------: | -------- | ---------- | ---------------------------------------- |
 |        host | yes      |            | Specifies the DNS host name or address for connecting to the remote device over the specified *transport*. The value of *host* is used as the destination address for the transport. |
 |        port | no       |            | Specifies the port to use when building the connection to the remote device. This value applies to either acceptable value of *transport*. The port value will default to the appropriate transport common port if none is provided in the task (cli=22, http=80, https=443). |
-|    username | no       |            | Configures the usename to use to authenticate the connection to the remote device.  The value of *username* is used to authenticate either the CLI login or the eAPI authentication depending on which *transport* is used. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_USERNAME will be used instead. |
+|    username | no       |            | Configures the username to use to authenticate the connection to the remote device.  The value of *username* is used to authenticate either the CLI login or the eAPI authentication depending on which *transport* is used. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_USERNAME will be used instead. |
 |    password | no       |            | Specifies the password to use to authenticate the connection to the remote device. This is a common argument used for either acceptable value of *transport*. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_PASSWORD will be used instead. |
 | ssh_keyfile | no       |            | Specifies the SSH keyfile to use to authenticate the connection to the remote device. This argument is only used when *transport=cli*. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_SSH_KEYFILE will be used instead. |
-|   authorize | no       | yes, no*   | Instructs the module to enter priviledged mode on the remote device before sending any commands. If not specified, the device will attempt to excecute all commands in non-priviledged mode. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_AUTHORIZE will be used instead. |
+|   authorize | no       | yes, no*   | Instructs the module to enter privileged mode on the remote device before sending any commands. If not specified, the device will attempt to execute all commands in non-privileged mode. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_AUTHORIZE will be used instead. |
 |   auth_pass | no       |            | Specifies the password to use if required to enter privileged mode on the remote device.  If *authorize=no*, then this argument does nothing. If the value is not specified in the task, the value of environment variable ANSIBLE_NET_AUTH_PASS will be used instead. |
 |   transport | yes      | cli*, eapi | Configures the transport connection to use when connecting to the remote device. The *transport* argument supports connectivity to the device over cli (ssh) or eapi. |
 |     use_ssl | no       | yes*, no   | Configures the transport to use SSL if set to true only when *transport=eapi*.  If *transport=cli*, this value is ignored. |
-|    provider | no       |            | Convience method that allows all the above connection arguments to be passed as a dict object. All constraints (required, choices, etc) must be met either by individual arguments or values in this dict. |
+|    provider | no       |            | Convenience method that allows all the above connection arguments to be passed as a dict object. All constraints (required, choices, etc) must be met either by individual arguments or values in this dict. |
 
 ```
 Note: Asterisk (*) denotes the default value if none specified
@@ -130,7 +131,7 @@ Dependencies
 ------------
 
 The eos-bgp role is built on modules included in the core Ansible code.
-These modules were added in ansible version 2.1
+These modules were added in Ansible version 2.1
 
 - Ansible 2.1.0
 
@@ -178,6 +179,7 @@ Sample host_vars/leaf1.example.com
           remote_as: 65002
           peer_group: demoleaf
           enable: true
+          fall_over_bfd: true
         - name: 10.1.1.3
           remote_as: 65002
           peer_group: demoleaf
