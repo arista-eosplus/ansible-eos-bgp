@@ -62,6 +62,17 @@ router bgp {{ bgp_as }}
 
 {% endif %}
 
+{# configure neighbor route-reflector-client #}
+{% if neighbor.route_reflector_client is defined and neighbor.route_reflector_client %}
+
+    neighbor {{ name }} route-reflector-client
+
+{% else %}
+
+    no neighbor {{ name }} route-reflector-client
+
+{% endif %}
+
 {# configure neighbor BFD failure detection #}
 {% if neighbor.fall_over_bfd is defined and neighbor.fall_over_bfd %}
 
