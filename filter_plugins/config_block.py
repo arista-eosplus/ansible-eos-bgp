@@ -44,7 +44,6 @@ def parse_config(config, indent=1):
 
     ancestors = list()
     data = collections.OrderedDict()
-    banner = False
 
     for line in config:
         text = str(line).strip()
