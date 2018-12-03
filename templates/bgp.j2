@@ -102,6 +102,17 @@ router bgp {{ bgp_as }}
       {% endfor %}
    {% endif %}
 
+   {# set cluster-id #}
+   {% if bgp.cluster_id is defined %}
+
+   bgp cluster-id {{ bgp.cluster_id }}
+
+   {% else %} {# no bgp.cluster_id #}
+
+   no bgp cluster-id
+
+   {% endif %} {# if bgp.cluster_id #}
+
    {# set router-id #}
    {% if bgp.router_id is defined %}
 
